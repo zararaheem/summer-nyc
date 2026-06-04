@@ -548,6 +548,42 @@ if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
 
+/* ---- shared sync via /api/state (Vercel KV); gracefully local-only if unavailable ---- */
+const SHARED_FIELDS=['toteOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount'];
+let SYNC_OK=false; const _opQ=[]; let _flushT=null;
+function _enqueue(op){ if(!SYNC_OK)return; _opQ.push(op); if(!_flushT)_flushT=setTimeout(_flush,350); }
+async function _flush(){ _flushT=null; if(!_opQ.length)return; const ops=_opQ.splice(0);
+  try{ await fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ops})}); }catch(e){} }
+// set/clear one key in a shared map — updates locally + queues a remote op
+function syncSet(field,key,value){ SAVE[field]=SAVE[field]||{};
+  if(value===null||value===undefined)delete SAVE[field][key]; else SAVE[field][key]=value;
+  persist(); _enqueue({field,key,value:(value===undefined?null:value)}); }
+// replace a whole shared field (e.g. the devices array)
+function syncField(field){ persist(); _enqueue({field,value:SAVE[field]}); }
+async function hydrate(){
+  try{
+    const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok)throw new Error('no kv');
+    const remote=await r.json(); SYNC_OK=true;
+    SHARED_FIELDS.forEach(f=>{ if(remote[f]!==undefined)SAVE[f]=remote[f]; });
+    if(remote.devSeeded)SAVE.devSeeded='v2';
+    persist();
+    if(!SAVE.devices||!SAVE.devices.length){ seedDevices(); syncField('devices'); _enqueue({field:'devSeeded',value:true}); }
+  }catch(e){ SYNC_OK=false; }
+  return SYNC_OK;
+}
+function activeView(){ const v=$('.view.active'); return v?v.id.replace('v-',''):state.view; }
+function refreshView(){ const ae=document.activeElement; if(ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName))return;
+  const v=activeView();
+  if(v==='overview')renderOverview(); else if(v==='weeks')renderWeeks(); else if(v==='todo')renderTodo();
+  else if(v==='packing')renderPacking(); else if(v==='quests')renderQuests(); else if(v==='setup')renderSetup(); }
+function startPolling(){ setInterval(async()=>{
+  if(!SYNC_OK||document.hidden)return;
+  try{ const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok)return; const remote=await r.json(); let changed=false;
+    SHARED_FIELDS.forEach(f=>{ if(remote[f]!==undefined && JSON.stringify(remote[f])!==JSON.stringify(SAVE[f])){SAVE[f]=remote[f];changed=true;} });
+    if(changed){ persist(); refreshView(); }
+  }catch(e){}
+}, 12000); }
+
 /* ---- router ---- */
 const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests'],['setup','Setup']];
 let state={view:'overview',week:1,wtab:'challenge'};
@@ -1035,7 +1071,7 @@ function toteHTML(c){
     return `<div class="tote info"><div class="lid" style="background:${c.color}"><div class="lbl">${esc(c.label)}</div><div class="comp">${esc(c.component)}</div><div class="zinfo">${c.kind==='manuel'?'🪵 Build scope':'📦 Rental / vendor'}</div></div>
       <div class="clearbox"><div class="note">${esc(c.note||'')}</div></div></div>`;
   }
-  const packed=c.contents.map((it,i)=>!!(SAVE.packed[c.id]&&SAVE.packed[c.id][i]));
+  const packed=c.contents.map((it,i)=>!!(SAVE.packed&&SAVE.packed[c.id+':'+i]));
   const n=packed.filter(Boolean).length;
   const badges=[c.persistent?`<span class="badge2 b-persist">All-summer</span>`:'', c.zone==='Identifiers'?`<span class="badge2 b-keep">Kids keep</span>`:''].join('');
   const oid=(SAVE.toteOwners&&SAVE.toteOwners[c.id])||''; const o=oid?OWN[oid]:null;
@@ -1057,10 +1093,9 @@ function wireEditable(root){
   $$('.ihl',root).forEach(btn=>btn.onclick=e=>{
     e.stopPropagation();
     const host=btn.closest('[data-k]'); if(!host)return; const key=host.dataset.k;
-    SAVE.itemHL=SAVE.itemHL||{};
-    if(SAVE.itemHL[key]){delete SAVE.itemHL[key];host.classList.remove('hl');btn.classList.remove('on');}
-    else{SAVE.itemHL[key]=1;host.classList.add('hl');btn.classList.add('on');}
-    persist();
+    const on=!(SAVE.itemHL&&SAVE.itemHL[key]);
+    host.classList.toggle('hl',on);btn.classList.toggle('on',on);
+    syncSet('itemHL',key,on?1:null);
   });
   $$('.inote-btn',root).forEach(btn=>btn.onclick=e=>{
     e.stopPropagation();
@@ -1073,20 +1108,18 @@ function wireEditable(root){
     inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}};
     inp.onblur=()=>{
       const host=inp.closest('[data-k]'); if(!host)return; const key=host.dataset.k; const v=inp.value.trim();
-      SAVE.itemNote=SAVE.itemNote||{};
-      if(v)SAVE.itemNote[key]=v; else{delete SAVE.itemNote[key];host.querySelector('.inote-row').setAttribute('hidden','');}
+      if(!v)host.querySelector('.inote-row').setAttribute('hidden','');
       host.querySelector('.inote-btn').classList.toggle('on',!!v);
-      persist();
+      syncSet('itemNote',key,v||null);
     };
   });
 }
 function wireTotes(root){
   wireEditable(root);
   $$('.pbox',root).forEach(b=>b.onclick=()=>{
-    const cid=b.dataset.c,i=+b.dataset.i;
-    SAVE.packed[cid]=SAVE.packed[cid]||{};
-    if(SAVE.packed[cid][i])delete SAVE.packed[cid][i];else SAVE.packed[cid][i]=1;
-    persist();
+    const cid=b.dataset.c,i=+b.dataset.i,key=cid+':'+i;
+    const on=!(SAVE.packed&&SAVE.packed[key]);
+    syncSet('packed',key,on?1:null);
     const tote=b.closest('.tote');const c=DATA.containers.find(x=>x.id===cid);
     tote.outerHTML=toteHTML(c);wireTotes(root);
   });
@@ -1094,9 +1127,7 @@ function wireTotes(root){
     s.onclick=e=>e.stopPropagation();
     s.onchange=()=>{
       const cid=s.dataset.c;
-      SAVE.toteOwners=SAVE.toteOwners||{};
-      if(s.value)SAVE.toteOwners[cid]=s.value; else delete SAVE.toteOwners[cid];
-      persist();
+      syncSet('toteOwners',cid,s.value||null);
       toast(s.value?`Owner: ${OWN[s.value].name}`:'Owner cleared');
       if(state.view==='packing'&&packGroup==='owner'&&root===$('#packBody')){renderPacking();return;}
       const c=DATA.containers.find(x=>x.id===cid);
@@ -1200,18 +1231,17 @@ function renderSetup(){
   }
   body.innerHTML=h;
   const add=()=>{const inp=$('#devInput'),v=inp.value.trim();if(!v)return;
-    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});persist();renderSetup();$('#devInput').focus();toast('Added');};
+    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('devices');renderSetup();$('#devInput').focus();toast('Added');};
   $('#devAddBtn').onclick=add;
   $('#devInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
-  $$('.dev-chk',body).forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(SAVE.deviceDone[id])delete SAVE.deviceDone[id];else SAVE.deviceDone[id]=1;persist();renderSetup();});
+  $$('.dev-chk',body).forEach(b=>b.onclick=()=>{const id=b.dataset.id;syncSet('deviceDone',id,(SAVE.deviceDone&&SAVE.deviceDone[id])?null:1);renderSetup();});
   $$('.dev-del',body).forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.id;
-    SAVE.devices=SAVE.devices.filter(d=>d.id!==id);delete SAVE.deviceDone[id];
-    if(SAVE.deviceCount)delete SAVE.deviceCount[id];
-    if(SAVE.itemHL)delete SAVE.itemHL['d:'+id];if(SAVE.itemNote)delete SAVE.itemNote['d:'+id];
-    persist();renderSetup();toast('Removed');});
+    SAVE.devices=SAVE.devices.filter(d=>d.id!==id);syncField('devices');
+    syncSet('deviceDone',id,null);syncSet('deviceCount',id,null);syncSet('itemHL','d:'+id,null);syncSet('itemNote','d:'+id,null);
+    renderSetup();toast('Removed');});
   $$('.dev-count',body).forEach(inp=>{
     inp.onclick=e=>e.stopPropagation();
-    inp.onchange=()=>{const id=inp.dataset.id,v=inp.value.trim();SAVE.deviceCount=SAVE.deviceCount||{};if(v==='')delete SAVE.deviceCount[id];else SAVE.deviceCount[id]=Number(v);persist();};
+    inp.onchange=()=>{const id=inp.dataset.id,v=inp.value.trim();syncSet('deviceCount',id,v===''?null:Number(v));};
   });
   wireEditable(body);
 }
@@ -1288,6 +1318,7 @@ $('#footer').innerHTML=`<b>The Alpha Odyssey — Hamptons 2026.</b> Built from t
 seedDevices();
 buildNav();
 go('packing');
+hydrate().then(ok=>{ if(ok){ refreshView(); startPolling(); } });
 
 </script>
 </body>
