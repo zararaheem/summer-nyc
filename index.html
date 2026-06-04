@@ -250,11 +250,16 @@ section{padding:34px 0}
 .tote .dbox svg{width:10px;height:10px;opacity:0}
 .tote .dbox.on svg{opacity:1}
 .devices-tote .lid{background:linear-gradient(135deg,#0a2240,#1c6db5)!important}
-.devices-tote{grid-column:1 / -1}
-.devices-tote .clearbox{background:#fffdf8}
-.devices-tote .devbody{padding:14px 16px}
-.devices-tote .dev-intro{font-size:.84rem;color:var(--ink2);margin-bottom:11px;max-width:760px}
-.devices-tote .dev-add{margin-top:0}
+.devices-tote .devbody{padding:0}
+.devcontents .dev-count{width:42px;font-family:'Spline Sans Mono',monospace;font-size:.72rem;font-weight:600;text-align:center;border:1px solid var(--line2);border-radius:5px;padding:2px 3px;background:var(--paper);color:var(--ink)}
+.devcontents .dev-count:focus{outline:none;border-color:var(--blue);background:#fff}
+.devcontents .dev-count::placeholder{color:var(--ink3);font-weight:400}
+.devcontents .iacts{margin-left:4px}
+.dev-addrow{border-bottom:none!important;padding-top:7px!important}
+.dev-addrow .dev-plus{width:16px;text-align:center;color:var(--kelly);font-weight:800;flex-shrink:0}
+.dev-addrow .devInput{flex:1;border:none;background:transparent;font-family:'Hanken Grotesk',sans-serif;font-size:.82rem;color:var(--ink);padding:1px 0}
+.dev-addrow .devInput:focus{outline:none}
+.dev-addrow .devInput::placeholder{color:var(--ink3)}
 .gh .grpassign{margin-left:10px;appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:600;font-size:.72rem;color:var(--ink2);background:var(--card);border:1px solid var(--line2);border-radius:7px;padding:3px 22px 3px 9px;cursor:pointer;vertical-align:middle;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%2334415a' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
 .gh .grpassign:hover{border-color:var(--blue)}
 /* ---- editable list items: highlight + note ---- */
@@ -1135,34 +1140,20 @@ function devicesCardHTML(c){
     ${ownerPickHTML(c.id)}</div>
     <div class="clearbox"><div class="devbody"></div></div></div>`;
 }
-// Full editable Devices & Tech UI, rendered into the card's .devbody container
+// Compact editable Devices & Tech list, rendered into the card's .devbody (tote-sized)
 function renderDevices(root){
   SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{}; SAVE.deviceCount=SAVE.deviceCount||{};
-  const done=SAVE.devices.filter(d=>SAVE.deviceDone[d.id]).length;
-  let h=`<p class="dev-intro">Everything that plugs in, charges, connects, or boots up. Enter how many are <b>available</b>, check each off to confirm, highlight what's urgent, and leave a note on anything. Add your own items too.</p>
-    <div class="dev-add"><input class="devInput" placeholder="Add a device or tech item…  (e.g. PA speaker, Wi-Fi router)" autocomplete="off"><button class="btn devAddBtn">Add</button></div>
-    <div class="dev-prog mono">${done}/${SAVE.devices.length} confirmed</div>`;
-  if(!SAVE.devices.length){ h+=`<div class="muted" style="padding:4px 2px">Nothing here yet — add your first item above.</div>`; }
-  else { h+=`<ul class="devlist">`; SAVE.devices.forEach(d=>{
+  const devs=SAVE.devices, done=devs.filter(d=>SAVE.deviceDone[d.id]).length;
+  const items=devs.map(d=>{
     const key='d:'+d.id, dn=!!SAVE.deviceDone[d.id];
     const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]), note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
     const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
-    h+=`<li class="devrow ${dn?'dn':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}">
-      <span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span>
-      <span class="iname">${esc(d.name)}</span>
-      <span class="dev-qty"><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="dev-qty-lbl">available</span></span>
-      <span class="iacts">
-        <button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button>
-        <button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button>
-        <button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button>
-      </span>
-      <div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div>
-    </li>`;
-  }); h+=`</ul>`; }
-  root.innerHTML=h;
+    return `<li class="${dn?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}"><span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span><span class="iname">${esc(d.name)}</span><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button><button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
+  }).join('');
+  root.innerHTML=`<ul class="contents devcontents">${items}<li class="dev-addrow"><span class="dev-plus">+</span><input class="devInput" placeholder="Add device or tech…" autocomplete="off"></li></ul>
+    <div class="foot"><span class="mono">${done}/${devs.length} confirmed · # = available</span><span class="miniprog"><i style="width:${devs.length?done/devs.length*100:0}%"></i></span></div>`;
   const add=()=>{const inp=root.querySelector('.devInput'),v=inp.value.trim();if(!v)return;
-    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('devices');renderDevices(root);root.querySelector('.devInput').focus();toast('Added');};
-  root.querySelector('.devAddBtn').onclick=add;
+    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('devices');renderDevices(root);root.querySelector('.devInput').focus();};
   root.querySelector('.devInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
   $$('.dev-chk',root).forEach(b=>b.onclick=()=>{const id=b.dataset.id;syncSet('deviceDone',id,(SAVE.deviceDone&&SAVE.deviceDone[id])?null:1);renderDevices(root);});
   $$('.dev-del',root).forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.id;
