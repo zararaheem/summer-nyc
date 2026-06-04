@@ -122,6 +122,12 @@ section{padding:34px 0}
 .wkhead h2{font-size:2.1rem;font-weight:800;margin:4px 0 2px}
 .wkhead .sub{font-family:'Fraunces',serif;font-style:italic;color:var(--ink2);font-size:1.05rem}
 .wkhead .meta{display:flex;gap:8px 20px;flex-wrap:wrap;font-family:'Spline Sans Mono',monospace;font-size:.72rem;color:var(--ink3);margin-top:10px}
+.wkowner{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;background:var(--card);border:1px solid var(--line2);border-radius:11px;padding:9px 13px;width:fit-content;max-width:100%}
+.wkowner-lbl{font-family:'Spline Sans Mono',monospace;font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);font-weight:700}
+.wkowner .odot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px var(--line2)}
+.wkownsel{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:.86rem;color:var(--ink);background:var(--paper);border:1px solid var(--line2);border-radius:8px;padding:5px 26px 5px 11px;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%2334415a' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
+.wkownsel:focus{outline:none;border-color:var(--blue)}
+.wkowner-note{font-size:.74rem;color:var(--ink3)}
 .subtabs{display:flex;gap:3px;flex-wrap:wrap;border-bottom:1px solid var(--line2);margin:16px 0 20px}
 .subtab{font-weight:600;font-size:.85rem;color:var(--ink3);padding:9px 15px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
 .subtab:hover{color:var(--ink)}
@@ -229,6 +235,68 @@ section{padding:34px 0}
 .tote .lid .lbl{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:.82rem;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tote .lid .comp{font-size:.8rem;font-weight:600;opacity:.95}
 .tote .lid .zinfo{font-family:'Spline Sans Mono',monospace;font-size:.62rem;opacity:.8;text-transform:uppercase;letter-spacing:.08em}
+.tote .lid .owner{display:flex;align-items:center;gap:6px;margin-top:6px}
+.tote .lid .odot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
+.tote .owner{flex-wrap:wrap;gap:5px}
+.tote .ochip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.42);color:#fff;font-weight:700;font-size:.72rem;border-radius:999px;padding:2px 5px 2px 8px}
+.tote .ochip-x{appearance:none;border:none;background:transparent;color:#fff;opacity:.75;cursor:pointer;font-size:.9rem;line-height:1;padding:0 1px;margin-left:1px}
+.tote .ochip-x:hover{opacity:1}
+.tote .ownadd{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:.72rem;color:#fff;background-color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:2px 21px 2px 9px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background-color .15s;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
+.tote .ownadd:hover{background-color:rgba(255,255,255,.34)}
+.tote .ownadd.unassigned{background-color:rgba(255,255,255,.1);border-style:dashed;color:rgba(255,255,255,.85);font-weight:600}
+.tote .ownadd option{color:var(--ink);background:#fff;font-weight:600}
+.tote .dbox{width:16px;height:16px;border:1.5px solid var(--line2);border-radius:4px;flex-shrink:0;margin-top:1px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.tote .dbox.on{background:var(--kelly);border-color:var(--kelly)}
+.tote .dbox svg{width:10px;height:10px;opacity:0}
+.tote .dbox.on svg{opacity:1}
+.devices-tote .lid{background:linear-gradient(135deg,#0a2240,#1c6db5)!important}
+.devices-tote .devbody{padding:0}
+.devcontents .dev-count{width:42px;font-family:'Spline Sans Mono',monospace;font-size:.72rem;font-weight:600;text-align:center;border:1px solid var(--line2);border-radius:5px;padding:2px 3px;background:var(--paper);color:var(--ink)}
+.devcontents .dev-count:focus{outline:none;border-color:var(--blue);background:#fff}
+.devcontents .dev-count::placeholder{color:var(--ink3);font-weight:400}
+.devcontents .iacts{margin-left:4px}
+.dev-addrow{border-bottom:none!important;padding-top:7px!important}
+.dev-addrow .dev-plus{width:16px;text-align:center;color:var(--kelly);font-weight:800;flex-shrink:0}
+.dev-addrow .devInput{flex:1;border:none;background:transparent;font-family:'Hanken Grotesk',sans-serif;font-size:.82rem;color:var(--ink);padding:1px 0}
+.dev-addrow .devInput:focus{outline:none}
+.dev-addrow .devInput::placeholder{color:var(--ink3)}
+.gh .grpassign{margin-left:10px;appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:600;font-size:.72rem;color:var(--ink2);background:var(--card);border:1px solid var(--line2);border-radius:7px;padding:3px 22px 3px 9px;cursor:pointer;vertical-align:middle;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%2334415a' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
+.gh .grpassign:hover{border-color:var(--blue)}
+/* ---- editable list items: highlight + note ---- */
+.iacts{display:inline-flex;gap:3px;align-items:center}
+.tote .iacts{margin-left:auto}
+.mat-tbl .iacts{float:right;margin-left:8px}
+.iact{appearance:none;border:1px solid var(--line2);background:var(--paper);color:var(--ink3);width:21px;height:21px;border-radius:5px;cursor:pointer;font-size:.72rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.iact:hover{background:var(--paper2);color:var(--ink)}
+.iact.ihl.on{background:#ffe16a;border-color:#e6c33a;color:#5a4a00}
+.iact.inote-btn.on{background:#dbeafe;border-color:#9bc2f0;color:#1c4f80}
+.iact.dev-del:hover{background:#fde9e4;border-color:var(--coral);color:var(--coral-d)}
+.inote-row{flex-basis:100%;width:100%;margin-top:5px;clear:both}
+.inote{width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:.78rem;border:1px solid var(--line2);border-radius:6px;padding:4px 8px;background:#fffef6;color:var(--ink)}
+.inote:focus{outline:none;border-color:var(--blue);background:#fff}
+.tote .contents li{flex-wrap:wrap}
+.tote li.hl{background:rgba(255,225,106,.5);border-radius:6px;padding-left:5px;padding-right:5px}
+tr.mrow.hl td{background:rgba(255,225,106,.4)}
+/* ---- setup: devices & tech ---- */
+.dev-add{display:flex;gap:9px;margin-top:18px;max-width:640px}
+.dev-add input{flex:1;font-family:'Hanken Grotesk',sans-serif;font-size:.92rem;border:1px solid var(--line2);border-radius:9px;padding:9px 13px;background:var(--card);color:var(--ink)}
+.dev-add input:focus{outline:none;border-color:var(--blue)}
+.dev-prog{margin:18px 0 8px;font-size:.78rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
+.devlist{list-style:none;max-width:760px;display:flex;flex-direction:column;gap:7px}
+.devrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px}
+.devrow.hl{background:rgba(255,225,106,.4);border-color:#e6c33a}
+.devrow .iname{flex:1;font-weight:600}
+.devrow.dn .iname{text-decoration:line-through;color:var(--ink3);font-weight:500}
+.devrow .pbox{width:18px;height:18px;border:1.5px solid var(--line2);border-radius:5px;flex-shrink:0;cursor:pointer;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.devrow .pbox.on{background:var(--kelly);border-color:var(--kelly)}
+.devrow .pbox svg{width:11px;height:11px;opacity:0}
+.devrow .pbox.on svg{opacity:1}
+.dev-qty{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+.dev-count{width:56px;font-family:'Spline Sans Mono',monospace;font-size:.84rem;font-weight:600;text-align:center;border:1px solid var(--line2);border-radius:7px;padding:4px 6px;background:var(--paper);color:var(--ink)}
+.dev-count:focus{outline:none;border-color:var(--blue);background:#fff}
+.dev-count::placeholder{color:var(--ink3);font-weight:400}
+.dev-qty-lbl{font-size:.68rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
+.devrow .iacts{margin-left:0}
 .tote .clearbox{background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(230,240,250,.35));padding:0}
 .tote .contents{list-style:none;padding:10px 14px;max-height:230px;overflow:auto}
 .tote .contents li{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;padding:4px 0;border-bottom:1px dashed var(--line)}
@@ -419,7 +487,7 @@ footer{padding:40px 0 60px;color:var(--ink3);font-size:.8rem;border-top:1px soli
 </div></div>
 
 <!-- OVERVIEW -->
-<div class="view active" id="v-overview">
+<div class="view" id="v-overview">
   <div class="hero"><div class="hero-inner">
     <div class="kicker"><span class="dot"></span><span id="heroKicker"></span></div>
     <h1>The Alpha <span class="od">Odyssey</span></h1>
@@ -459,7 +527,7 @@ footer{padding:40px 0 60px;color:var(--ink3);font-size:.8rem;border-top:1px soli
 </div></div>
 
 <!-- PACKING -->
-<div class="view" id="v-packing"><div class="wrap">
+<div class="view active" id="v-packing"><div class="wrap">
   <section style="padding-top:26px">
     <div class="sec-head"><span class="eyebrow">Logistics</span><h2>Packing — The Clear-Tote System</h2></div>
     <p class="sec-sub">Every physical item lives in a labeled clear container. A mover reads the label, finds the tote, checks the contents. Group by week or by storage zone. Manuel/Fluō builds and rentals are flagged — those don't ship in a tote.</p>
@@ -487,17 +555,67 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 const OWN={}; DATA.owners.forEach(o=>OWN[o.id]=o);
+const PACK_OWNERS=['alice','julianne','zara'];  // operations leads who own totes
+// synthetic "Devices & Tech" card that lives in the Packing > Camp-Core group
+DATA.containers.unshift({id:'devices-card',kind:'devices',week:'core',zone:'Tech & Devices',color:'#0a2240',label:'AO · CORE · DEVICES',component:'Devices & Tech'});
+// owners can be a single id (legacy) or an array; normalize to an array
+function ownersOf(cid){ const v=SAVE.toteOwners&&SAVE.toteOwners[cid]; if(v==null)return []; return Array.isArray(v)?v.slice():[v]; }
+function ownerRank(id){ const i=PACK_OWNERS.indexOf(id); return i<0?50:i; }
+// shared multi-owner picker shown on a tote's colored lid
+function ownerPickHTML(cid){
+  const ids=ownersOf(cid).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b));
+  const chips=ids.map(id=>{const o=OWN[id];return `<span class="ochip"><span class="odot" style="background:${o.color}"></span>${esc(o.name)}<button class="ochip-x" data-c="${esc(cid)}" data-o="${esc(id)}" title="Remove">×</button></span>`;}).join('');
+  const remaining=PACK_OWNERS.map(i=>OWN[i]).filter(o=>o&&!ids.includes(o.id));
+  const addSel=remaining.length?`<select class="ownadd ${ids.length?'':'unassigned'}" data-c="${esc(cid)}" title="Add owner"><option value="" selected>${ids.length?'+ owner':'+ Assign owner'}</option>${remaining.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('')}</select>`:'';
+  return `<div class="owner">${chips}${addSel}</div>`;
+}
 const WK={}; DATA.weeks.forEach(w=>WK[w.num]=w);
 const ROLE_COLORS={A:'#0a2240',R:'#1d854a',S:'#1c6db5',O:'#d99a24',N:'#94a3b8'};
 const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'Notified'};
 
 /* ---- persistence (localStorage; graceful fallback) ---- */
 const STORE_KEY='alphaOdyssey2026';
-let SAVE={done:{},owners:{},packed:{}};
+let SAVE={done:{},owners:{},packed:{},toteOwners:{},weekOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{}};
 try{const raw=localStorage.getItem(STORE_KEY); if(raw) SAVE=Object.assign(SAVE,JSON.parse(raw));}catch(e){}
 if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
+
+/* ---- shared sync via /api/state (Vercel KV); gracefully local-only if unavailable ---- */
+const SHARED_FIELDS=['toteOwners','weekOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount'];
+let SYNC_OK=false; const _opQ=[]; let _flushT=null;
+function _enqueue(op){ if(!SYNC_OK)return; _opQ.push(op); if(!_flushT)_flushT=setTimeout(_flush,350); }
+async function _flush(){ _flushT=null; if(!_opQ.length)return; const ops=_opQ.splice(0);
+  try{ await fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ops})}); }catch(e){} }
+// set/clear one key in a shared map — updates locally + queues a remote op
+function syncSet(field,key,value){ SAVE[field]=SAVE[field]||{};
+  if(value===null||value===undefined)delete SAVE[field][key]; else SAVE[field][key]=value;
+  persist(); _enqueue({field,key,value:(value===undefined?null:value)}); }
+// replace a whole shared field (e.g. the devices array)
+function syncField(field){ persist(); _enqueue({field,value:SAVE[field]}); }
+async function hydrate(){
+  try{
+    const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok)throw new Error('no kv');
+    const remote=await r.json(); SYNC_OK=true;
+    SHARED_FIELDS.forEach(f=>{ if(remote[f]!==undefined)SAVE[f]=remote[f]; });
+    if(remote.devSeeded)SAVE.devSeeded='v3';
+    persist();
+    if(!SAVE.devices||!SAVE.devices.length){ seedDevices(); syncField('devices'); syncField('toteOwners'); _enqueue({field:'devSeeded',value:true}); }
+  }catch(e){ SYNC_OK=false; }
+  return SYNC_OK;
+}
+function activeView(){ const v=$('.view.active'); return v?v.id.replace('v-',''):state.view; }
+function refreshView(){ const ae=document.activeElement; if(ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName))return;
+  const v=activeView();
+  if(v==='overview')renderOverview(); else if(v==='weeks')renderWeeks(); else if(v==='todo')renderTodo();
+  else if(v==='packing')renderPacking(); else if(v==='quests')renderQuests(); }
+function startPolling(){ setInterval(async()=>{
+  if(!SYNC_OK||document.hidden)return;
+  try{ const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok)return; const remote=await r.json(); let changed=false;
+    SHARED_FIELDS.forEach(f=>{ if(remote[f]!==undefined && JSON.stringify(remote[f])!==JSON.stringify(SAVE[f])){SAVE[f]=remote[f];changed=true;} });
+    if(changed){ persist(); refreshView(); }
+  }catch(e){}
+}, 12000); }
 
 /* ---- router ---- */
 const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests']];
@@ -595,9 +713,23 @@ function renderWeeks(){
   $('#weekSel').innerHTML=DATA.weeks.map(w=>`<span class="wpill ${w.num===state.week?'active':''}" data-w="${w.num}">W${w.num}<span style="opacity:.6;font-weight:500;font-family:inherit"> · ${esc(w.title.split(' ')[0].replace('SERHANT.','Serhant'))}</span></span>`).join('');
   $$('#weekSel .wpill').forEach(p=>p.onclick=()=>{state.week=+p.dataset.w;renderWeeks();});
   const w=WK[state.week];
+  const woid=(SAVE.weekOwners&&SAVE.weekOwners[w.num])||''; const wo=woid?OWN[woid]:null;
+  const wkPackN=DATA.containers.filter(c=>c.week===w.num&&c.kind==='pack').length;
+  const woMenu=`<div class="wkowner"><span class="wkowner-lbl">Week owner</span><span class="odot" style="background:${wo?wo.color:'transparent'}"></span>
+    <select id="wkOwnerSel" class="wkownsel">
+      <option value="" ${wo?'':'selected'}>— Unassigned —</option>
+      ${PACK_OWNERS.map(id=>OWN[id]).filter(Boolean).map(x=>`<option value="${x.id}" ${x.id===woid?'selected':''}>${esc(x.name)}</option>`).join('')}
+    </select><span class="wkowner-note">applies to all ${wkPackN} tote${wkPackN===1?'':'s'} this week</span></div>`;
   $('#weekHead').innerHTML=`<div class="wkhead"><div class="wn">Week ${w.num} · ${esc(w.dates)}</div>
     <h2>${esc(w.title)}</h2><div class="sub">${esc(w.sub)}</div>
-    <div class="meta"><span>📍 ${esc(w.loc)}</span><span>🏁 ${esc(w.finale)}</span></div></div>`;
+    <div class="meta"><span>📍 ${esc(w.loc)}</span><span>🏁 ${esc(w.finale)}</span></div>${woMenu}</div>`;
+  $('#wkOwnerSel').onchange=function(){
+    const v=this.value;
+    syncSet('weekOwners',w.num,v||null);
+    DATA.containers.filter(c=>c.week===w.num&&c.kind==='pack').forEach(c=>syncSet('toteOwners',c.id,v?[v]:null));
+    toast(v?`Week ${w.num} → ${OWN[v].name} (${wkPackN} totes)`:`Week ${w.num} owners cleared`);
+    renderWeeks();
+  };
   const wkTasks=DATA.tasks.filter(t=>t.week===w.num);
   const wkCont=DATA.containers.filter(c=>c.week===w.num);
   const wkTalent=w.talent||[];
@@ -609,7 +741,7 @@ function renderWeeks(){
   const pane=$('#weekPane');
   if(state.wtab==='challenge')pane.innerHTML=weekChallenge(w);
   else if(state.wtab==='schedule')pane.innerHTML=weekSchedule(w);
-  else if(state.wtab==='materials')pane.innerHTML=weekMaterials(w);
+  else if(state.wtab==='materials'){pane.innerHTML=weekMaterials(w);wireEditable(pane);}
   else if(state.wtab==='talent'){pane.innerHTML=weekTalent(w);wireTalent(pane);}
   else if(state.wtab==='todo'){pane.innerHTML=`<div id="wkTodo"></div>`;renderTaskList($('#wkTodo'),wkTasks,true);}
   else if(state.wtab==='packing'){pane.innerHTML=wkCont.length?`<div class="totes">${wkCont.map(toteHTML).join('')}</div>`:`<div class="card muted">No containers for this week.</div>`;wireTotes(pane);}
@@ -648,16 +780,17 @@ function weekSchedule(w){
 }
 function weekMaterials(w){
   let h=`<p class="sec-sub">From the canonical materials list. <span class="srcflag src-rental">Rental</span> = vendor/rental · <span class="srcflag src-have">Have</span> = existing inventory · prices: $ &lt;10 · $$ 10–50 · $$$ 50–200 · $$$$ 200+.</p>`;
-  w.materials.sections.forEach(s=>{
+  w.materials.sections.forEach((s,si)=>{
     const items=s.items.filter(it=>it.source!=='manuel');
     const isManuel=s.manuel||(s.items.length&&s.items.every(it=>it.source==='manuel'));
     h+=`<div class="mat-sec"><h4>${esc(s.section)}</h4>`;
     if(items.length){
       h+=`<table class="mat-tbl"><thead><tr><th style="width:30%">Item</th><th>Qty</th><th>$</th><th>Purpose</th><th>Src</th></tr></thead><tbody>`;
-      items.forEach(it=>{
+      items.forEach((it,ii)=>{
         const links=(it.links||[]).map(l=>`<a href="${esc(l.url)}" target="_blank">${esc(l.text.replace(/^Amazon:?\s*/i,'').replace(/^Etsy:?\s*/i,'').slice(0,15))}↗</a>`).join(' ');
         const sf=it.source==='rental'?`<span class="srcflag src-rental">Rent</span>`:it.source==='have'?`<span class="srcflag src-have">Have</span>`:(it.custom?`<span class="srcflag" style="background:#fde9e4;color:var(--coral-d)">Custom</span>`:'');
-        h+=`<tr><td><span class="nm">${esc(it.name)}</span>${links?`<div class="linklist" style="margin-top:3px">${links}</div>`:''}</td>
+        const key='m:'+w.num+':'+si+':'+ii;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+        h+=`<tr class="mrow ${hl?'hl':''}" data-k="${esc(key)}"><td><span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><span class="nm">${esc(it.name)}</span>${links?`<div class="linklist" style="margin-top:3px">${links}</div>`:''}<div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></td>
           <td class="qtybadge">${esc(it.qty)}</td><td class="tier">${esc(it.tier)}</td><td style="font-size:.84rem;color:var(--ink2)">${esc(it.purpose)}</td><td>${sf}</td></tr>`;
       });
       h+=`</tbody></table>`;
@@ -981,51 +1114,160 @@ function renderTaskList(root,tasks,editable){
 /* ============ PACKING ============ */
 let packGroup='week';
 function toteHTML(c){
+  if(c.kind==='devices')return devicesCardHTML(c);
   if(c.kind!=='pack'){
     return `<div class="tote info"><div class="lid" style="background:${c.color}"><div class="lbl">${esc(c.label)}</div><div class="comp">${esc(c.component)}</div><div class="zinfo">${c.kind==='manuel'?'🪵 Build scope':'📦 Rental / vendor'}</div></div>
       <div class="clearbox"><div class="note">${esc(c.note||'')}</div></div></div>`;
   }
-  const packed=c.contents.map((it,i)=>!!(SAVE.packed[c.id]&&SAVE.packed[c.id][i]));
+  const packed=c.contents.map((it,i)=>!!(SAVE.packed&&SAVE.packed[c.id+':'+i]));
   const n=packed.filter(Boolean).length;
   const badges=[c.persistent?`<span class="badge2 b-persist">All-summer</span>`:'', c.zone==='Identifiers'?`<span class="badge2 b-keep">Kids keep</span>`:''].join('');
+  const ownerPick=ownerPickHTML(c.id);
   return `<div class="tote" data-c="${c.id}"><div class="lid" style="background:${c.color}">
     <div class="lbl"><span>${esc(c.label)}</span>${badges}</div>
     <div class="comp">${esc(c.component)}</div>
-    <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div></div>
-    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>`<li class="${packed[i]?'pk':''}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}</li>`).join('')}</ul></div>
+    <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div>
+    ${ownerPick}</div>
+    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>{const key='t:'+c.id+':'+i;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';return `<li class="${packed[i]?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}<span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;}).join('')}</ul></div>
     <div class="foot"><span class="mono">${n}/${c.contents.length}</span><span class="miniprog"><i style="width:${c.contents.length?n/c.contents.length*100:0}%"></i></span></div></div>`;
 }
+// Devices & Tech card for the Packing > Camp-Core group — mirrors the Setup list (read-only here)
+function devicesCardHTML(c){
+  return `<div class="tote devices-tote" data-c="${esc(c.id)}"><div class="lid" style="background:${c.color}">
+    <div class="lbl"><span>${esc(c.label)}</span></div>
+    <div class="comp">${esc(c.component)}</div>
+    <div class="zinfo">All summer · Tech</div>
+    ${ownerPickHTML(c.id)}</div>
+    <div class="clearbox"><div class="devbody"></div></div></div>`;
+}
+// Compact editable Devices & Tech list, rendered into the card's .devbody (tote-sized)
+function renderDevices(root){
+  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{}; SAVE.deviceCount=SAVE.deviceCount||{};
+  const devs=SAVE.devices, done=devs.filter(d=>SAVE.deviceDone[d.id]).length;
+  const items=devs.map(d=>{
+    const key='d:'+d.id, dn=!!SAVE.deviceDone[d.id];
+    const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]), note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+    const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
+    return `<li class="${dn?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}"><span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span><span class="iname">${esc(d.name)}</span><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button><button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
+  }).join('');
+  root.innerHTML=`<ul class="contents devcontents">${items}<li class="dev-addrow"><span class="dev-plus">+</span><input class="devInput" placeholder="Add device or tech…" autocomplete="off"></li></ul>
+    <div class="foot"><span class="mono">${done}/${devs.length} confirmed · # = available</span><span class="miniprog"><i style="width:${devs.length?done/devs.length*100:0}%"></i></span></div>`;
+  const add=()=>{const inp=root.querySelector('.devInput'),v=inp.value.trim();if(!v)return;
+    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('devices');renderDevices(root);root.querySelector('.devInput').focus();};
+  root.querySelector('.devInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
+  $$('.dev-chk',root).forEach(b=>b.onclick=()=>{const id=b.dataset.id;syncSet('deviceDone',id,(SAVE.deviceDone&&SAVE.deviceDone[id])?null:1);renderDevices(root);});
+  $$('.dev-del',root).forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.id;
+    SAVE.devices=SAVE.devices.filter(d=>d.id!==id);syncField('devices');
+    syncSet('deviceDone',id,null);syncSet('deviceCount',id,null);syncSet('itemHL','d:'+id,null);syncSet('itemNote','d:'+id,null);
+    renderDevices(root);toast('Removed');});
+  $$('.dev-count',root).forEach(inp=>{ inp.onclick=e=>e.stopPropagation();
+    inp.onchange=()=>{const id=inp.dataset.id,v=inp.value.trim();syncSet('deviceCount',id,v===''?null:Number(v));}; });
+  wireEditable(root);
+}
+/* highlight + note controls shared by totes, materials tables, devices */
+function wireEditable(root){
+  $$('.ihl',root).forEach(btn=>btn.onclick=e=>{
+    e.stopPropagation();
+    const host=btn.closest('[data-k]'); if(!host)return; const key=host.dataset.k;
+    const on=!(SAVE.itemHL&&SAVE.itemHL[key]);
+    host.classList.toggle('hl',on);btn.classList.toggle('on',on);
+    syncSet('itemHL',key,on?1:null);
+  });
+  $$('.inote-btn',root).forEach(btn=>btn.onclick=e=>{
+    e.stopPropagation();
+    const host=btn.closest('[data-k]'); if(!host)return; const row=host.querySelector('.inote-row'); const inp=row.querySelector('.inote');
+    if(!row.hasAttribute('hidden') && !inp.value.trim())row.setAttribute('hidden','');
+    else{row.removeAttribute('hidden');inp.focus();}
+  });
+  $$('.inote',root).forEach(inp=>{
+    inp.onclick=e=>e.stopPropagation();
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}};
+    inp.onblur=()=>{
+      const host=inp.closest('[data-k]'); if(!host)return; const key=host.dataset.k; const v=inp.value.trim();
+      if(!v)host.querySelector('.inote-row').setAttribute('hidden','');
+      host.querySelector('.inote-btn').classList.toggle('on',!!v);
+      syncSet('itemNote',key,v||null);
+    };
+  });
+}
 function wireTotes(root){
+  wireEditable(root);
   $$('.pbox',root).forEach(b=>b.onclick=()=>{
-    const cid=b.dataset.c,i=+b.dataset.i;
-    SAVE.packed[cid]=SAVE.packed[cid]||{};
-    if(SAVE.packed[cid][i])delete SAVE.packed[cid][i];else SAVE.packed[cid][i]=1;
-    persist();
+    const cid=b.dataset.c,i=+b.dataset.i,key=cid+':'+i;
+    const on=!(SAVE.packed&&SAVE.packed[key]);
+    syncSet('packed',key,on?1:null);
     const tote=b.closest('.tote');const c=DATA.containers.find(x=>x.id===cid);
     tote.outerHTML=toteHTML(c);wireTotes(root);
   });
+  const reflowOwner=(cid,el)=>{
+    if(state.view==='packing'&&packGroup==='owner'&&root===$('#packBody')){renderPacking();return;}
+    const c=DATA.containers.find(x=>x.id===cid);
+    el.closest('.tote').outerHTML=toteHTML(c);wireTotes(root);
+  };
+  $$('.ownadd',root).forEach(s=>{
+    s.onclick=e=>e.stopPropagation();
+    s.onchange=()=>{
+      const cid=s.dataset.c, add=s.value; if(!add)return;
+      const ids=ownersOf(cid); if(!ids.includes(add))ids.push(add);
+      syncSet('toteOwners',cid,ids);
+      toast(`Owner: ${OWN[add].name}`);
+      reflowOwner(cid,s);
+    };
+  });
+  $$('.ochip-x',root).forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const cid=b.dataset.c, rm=b.dataset.o;
+    const ids=ownersOf(cid).filter(id=>id!==rm);
+    syncSet('toteOwners',cid,ids.length?ids:null);
+    toast(`Removed ${OWN[rm]?OWN[rm].name:'owner'}`);
+    reflowOwner(cid,b);
+  });
+  $$('.devices-tote .devbody',root).forEach(el=>renderDevices(el));
 }
 function renderPacking(){
   $('#packControls').innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
-    <div class="packtoggle"><span class="${packGroup==='week'?'active':''}" data-g="week">By week</span><span class="${packGroup==='zone'?'active':''}" data-g="zone">By storage zone</span></div>
-    <span class="muted" style="font-size:.82rem">Label scheme <code>AO · W# · COMPONENT · ##</code> · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.containers.filter(c=>c.kind!=='pack').length} build/rental flags</span>
+    <div class="packtoggle"><span class="${packGroup==='week'?'active':''}" data-g="week">By week</span><span class="${packGroup==='zone'?'active':''}" data-g="zone">By storage zone</span><span class="${packGroup==='owner'?'active':''}" data-g="owner">By owner</span></div>
+    <span class="muted" style="font-size:.82rem">Label scheme <code>AO · W# · COMPONENT · ##</code> · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.containers.filter(c=>c.kind!=='pack'&&c.kind!=='devices').length} build/rental flags</span>
     <button class="btn ghost" style="margin-left:auto" onclick="window.print()">⎙ Print pick list</button></div>`;
   $$('#packControls .packtoggle span').forEach(s=>s.onclick=()=>{packGroup=s.dataset.g;renderPacking();});
   const groups={};
   DATA.containers.forEach(c=>{
+    if(packGroup==='owner'){
+      // a card with multiple owners appears under EACH owner's name
+      const ids=ownersOf(c.id).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b));
+      if(!ids.length){(groups['Unassigned']=groups['Unassigned']||[]).push(c);}
+      else ids.forEach(id=>{const k=OWN[id].name;(groups[k]=groups[k]||[]).push(c);});
+      return;
+    }
     const key = packGroup==='week' ? (c.week==='core'?'Camp-Core · all summer':'Week '+c.week+' · '+(WK[c.week]?WK[c.week].title:'')) : c.zone;
     (groups[key]=groups[key]||[]).push(c);
   });
   let order=Object.keys(groups);
   if(packGroup==='week')order.sort((a,b)=>{const na=a.startsWith('Camp')?-1:+(a.match(/\d+/)||[99])[0];const nb=b.startsWith('Camp')?-1:+(b.match(/\d+/)||[99])[0];return na-nb;});
+  else if(packGroup==='owner'){const rank=n=>{if(n==='Unassigned')return 99;const i=PACK_OWNERS.map(id=>OWN[id]&&OWN[id].name).indexOf(n);return i<0?50:i;};order.sort((a,b)=>rank(a)-rank(b));}
   else order.sort();
   let h='';
   order.forEach(g=>{
-    const zc = packGroup==='zone' ? (DATA.zone_colors[g]||'#888') : 'var(--ink)';
-    h+=`<div class="packgroup"><div class="gh"><span class="zsw" style="background:${zc}"></span>${esc(g)} <span class="muted" style="font-size:.8rem;font-weight:400">· ${groups[g].length}</span></div>
+    let zc='var(--ink)';
+    if(packGroup==='zone') zc=DATA.zone_colors[g]||'#888';
+    else if(packGroup==='owner'){const o=DATA.owners.find(o=>o.name===g); zc=o?o.color:'#94a3b8';}
+    // "assign whole week to one person" — only in By-week view
+    let gassign='';
+    if(packGroup==='week'){
+      const gw=groups[g][0]&&groups[g][0].week;
+      gassign=`<select class="grpassign" data-w="${esc(String(gw))}" title="Assign every tote in this week to one person"><option value="">Assign all →</option>${PACK_OWNERS.map(id=>OWN[id]).filter(Boolean).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('')}<option value="__clear">Clear all</option></select>`;
+    }
+    h+=`<div class="packgroup"><div class="gh"><span class="zsw" style="background:${zc}"></span>${esc(g)} <span class="muted" style="font-size:.8rem;font-weight:400">· ${groups[g].length}</span>${gassign}</div>
       <div class="totes">${groups[g].map(toteHTML).join('')}</div></div>`;
   });
   $('#packBody').innerHTML=h;
+  $$('#packBody .grpassign').forEach(s=>s.onchange=()=>{
+    const w=s.dataset.w, v=s.value; if(!v)return;
+    const list=DATA.containers.filter(c=>String(c.week)===String(w)&&c.kind==='pack');
+    if(v==='__clear'){ list.forEach(c=>syncSet('toteOwners',c.id,null)); if(w!=='core')syncSet('weekOwners',w,null); toast(`Cleared ${list.length} totes`); }
+    else { list.forEach(c=>syncSet('toteOwners',c.id,[v])); if(w!=='core')syncSet('weekOwners',w,v); toast(`${list.length} totes → ${OWN[v].name}`); }
+    renderPacking();
+  });
   wireTotes($('#packBody'));
 }
 
@@ -1048,6 +1290,23 @@ function renderQuests(){
   $$('#questsBody .quest-h').forEach(hh=>hh.onclick=()=>hh.parentElement.classList.toggle('open'));
 }
 
+/* ============ SETUP · DEVICES & TECH ============ */
+// Known kit, pre-loaded on first visit. Editable/deletable; won't re-add once seeded.
+const DEVICE_SEED=['iPads','Apple Pencils','iPad chargers','Laptops','Headphones','Laptop chargers','Charging cart'];
+const DEVICE_OLD=['iPad charging cart','Over-ear headphones','Wi-Fi router + range extender'];
+function seedDevices(){
+  if(SAVE.devSeeded==='v3')return;
+  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{}; SAVE.deviceCount=SAVE.deviceCount||{}; SAVE.toteOwners=SAVE.toteOwners||{};
+  // drop earlier placeholder items, but only if the user never touched them
+  SAVE.devices=SAVE.devices.filter(d=>{
+    if(!DEVICE_OLD.includes(d.name))return true;
+    const k='d:'+d.id;
+    return SAVE.deviceDone[d.id]||(SAVE.itemHL&&SAVE.itemHL[k])||(SAVE.itemNote&&SAVE.itemNote[k])||(SAVE.deviceCount[d.id]!=null);
+  });
+  DEVICE_SEED.forEach(name=>{ if(!SAVE.devices.some(d=>d.name===name)) SAVE.devices.push({id:'dev'+Math.random().toString(36).slice(2,9),name}); });
+  if(SAVE.toteOwners['devices-card']==null) SAVE.toteOwners['devices-card']=['julianne','zara'];
+  SAVE.devSeeded='v3'; persist();
+}
 /* ============ COUNTDOWN ============ */
 const CAMP_START=new Date('2026-06-29T08:00:00-04:00');  // Mon Jun 29 · 8am ET
 const CAMP_END=new Date('2026-08-28T20:00:00-04:00');    // Fri Aug 28 · 8pm ET (post-bonfire)
@@ -1117,8 +1376,10 @@ tickCountdown(); setInterval(tickCountdown,1000);
 
 /* ============ FOOTER + BOOT ============ */
 $('#footer').innerHTML=`<b>The Alpha Odyssey — Hamptons 2026.</b> Built from the canonical program files (materials, challenges, daily schedule). Week 7 = SERHANT (Aug 10–14); Week 8 = Concert (Aug 17–21). Your checklists and owner edits save in this browser. · ${DATA.tasks.length} tasks · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.side_quests.length} side quests.`;
+seedDevices();
 buildNav();
-renderOverview();
+go('packing');
+hydrate().then(ok=>{ if(ok){ refreshView(); startPolling(); } });
 
 </script>
 </body>
