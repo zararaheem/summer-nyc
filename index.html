@@ -250,6 +250,13 @@ section{padding:34px 0}
 .tote .dbox svg{width:10px;height:10px;opacity:0}
 .tote .dbox.on svg{opacity:1}
 .devices-tote .lid{background:linear-gradient(135deg,#0a2240,#1c6db5)!important}
+.devices-tote{grid-column:1 / -1}
+.devices-tote .clearbox{background:#fffdf8}
+.devices-tote .devbody{padding:14px 16px}
+.devices-tote .dev-intro{font-size:.84rem;color:var(--ink2);margin-bottom:11px;max-width:760px}
+.devices-tote .dev-add{margin-top:0}
+.gh .grpassign{margin-left:10px;appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:600;font-size:.72rem;color:var(--ink2);background:var(--card);border:1px solid var(--line2);border-radius:7px;padding:3px 22px 3px 9px;cursor:pointer;vertical-align:middle;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%2334415a' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
+.gh .grpassign:hover{border-color:var(--blue)}
 /* ---- editable list items: highlight + note ---- */
 .iacts{display:inline-flex;gap:3px;align-items:center}
 .tote .iacts{margin-left:auto}
@@ -533,13 +540,6 @@ footer{padding:40px 0 60px;color:var(--ink3);font-size:.8rem;border-top:1px soli
   </section>
 </div></div>
 
-<!-- SETUP -->
-<div class="view" id="v-setup"><div class="wrap">
-  <section style="padding-top:26px">
-    <div id="setupBody"></div>
-  </section>
-</div></div>
-
 <footer><div class="wrap" id="footer"></div></footer>
 <div class="toast" id="toast"></div>
 
@@ -603,7 +603,7 @@ function activeView(){ const v=$('.view.active'); return v?v.id.replace('v-','')
 function refreshView(){ const ae=document.activeElement; if(ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName))return;
   const v=activeView();
   if(v==='overview')renderOverview(); else if(v==='weeks')renderWeeks(); else if(v==='todo')renderTodo();
-  else if(v==='packing')renderPacking(); else if(v==='quests')renderQuests(); else if(v==='setup')renderSetup(); }
+  else if(v==='packing')renderPacking(); else if(v==='quests')renderQuests(); }
 function startPolling(){ setInterval(async()=>{
   if(!SYNC_OK||document.hidden)return;
   try{ const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok)return; const remote=await r.json(); let changed=false;
@@ -613,7 +613,7 @@ function startPolling(){ setInterval(async()=>{
 }, 12000); }
 
 /* ---- router ---- */
-const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests'],['setup','Setup']];
+const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests']];
 let state={view:'overview',week:1,wtab:'challenge'};
 function buildNav(){
   $('#navTabs').innerHTML=VIEWS.map(([id,lbl])=>{
@@ -632,7 +632,7 @@ function go(v){
   $$('#navTabs .nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
   window.scrollTo({top:0});
   if(v==='overview')renderOverview(); if(v==='weeks')renderWeeks();
-  if(v==='todo')renderTodo(); if(v==='packing')renderPacking(); if(v==='quests')renderQuests(); if(v==='setup')renderSetup();
+  if(v==='todo')renderTodo(); if(v==='packing')renderPacking(); if(v==='quests')renderQuests();
 }
 
 /* ============ OVERVIEW ============ */
@@ -1128,20 +1128,50 @@ function toteHTML(c){
 }
 // Devices & Tech card for the Packing > Camp-Core group — mirrors the Setup list (read-only here)
 function devicesCardHTML(c){
-  const devs=SAVE.devices||[];
-  const done=devs.filter(d=>SAVE.deviceDone&&SAVE.deviceDone[d.id]).length;
-  const rows=devs.length?devs.map(d=>{
-    const dn=!!(SAVE.deviceDone&&SAVE.deviceDone[d.id]);
-    const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
-    return `<li class="${dn?'pk':''}"><span class="dbox ${dn?'on':''}">${CHK}</span><span class="iname">${esc(d.name)}</span>${cnt!==''?`<span class="iqty">${esc(cnt)} avail</span>`:''}</li>`;
-  }).join(''):`<li class="muted" style="padding:6px 2px">No devices yet — add them in Setup.</li>`;
   return `<div class="tote devices-tote" data-c="${esc(c.id)}"><div class="lid" style="background:${c.color}">
-    <div class="lbl"><span>${esc(c.label)}</span><span class="badge2 b-keep">Setup</span></div>
+    <div class="lbl"><span>${esc(c.label)}</span></div>
     <div class="comp">${esc(c.component)}</div>
     <div class="zinfo">All summer · Tech</div>
     ${ownerPickHTML(c.id)}</div>
-    <div class="clearbox"><ul class="contents">${rows}</ul></div>
-    <div class="foot"><span class="mono">${done}/${devs.length} confirmed</span><button class="btn ghost devices-open" style="margin-left:auto;font-size:.72rem;padding:4px 10px">Open Devices &amp; Tech →</button></div></div>`;
+    <div class="clearbox"><div class="devbody"></div></div></div>`;
+}
+// Full editable Devices & Tech UI, rendered into the card's .devbody container
+function renderDevices(root){
+  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{}; SAVE.deviceCount=SAVE.deviceCount||{};
+  const done=SAVE.devices.filter(d=>SAVE.deviceDone[d.id]).length;
+  let h=`<p class="dev-intro">Everything that plugs in, charges, connects, or boots up. Enter how many are <b>available</b>, check each off to confirm, highlight what's urgent, and leave a note on anything. Add your own items too.</p>
+    <div class="dev-add"><input class="devInput" placeholder="Add a device or tech item…  (e.g. PA speaker, Wi-Fi router)" autocomplete="off"><button class="btn devAddBtn">Add</button></div>
+    <div class="dev-prog mono">${done}/${SAVE.devices.length} confirmed</div>`;
+  if(!SAVE.devices.length){ h+=`<div class="muted" style="padding:4px 2px">Nothing here yet — add your first item above.</div>`; }
+  else { h+=`<ul class="devlist">`; SAVE.devices.forEach(d=>{
+    const key='d:'+d.id, dn=!!SAVE.deviceDone[d.id];
+    const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]), note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+    const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
+    h+=`<li class="devrow ${dn?'dn':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}">
+      <span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span>
+      <span class="iname">${esc(d.name)}</span>
+      <span class="dev-qty"><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="dev-qty-lbl">available</span></span>
+      <span class="iacts">
+        <button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button>
+        <button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button>
+        <button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button>
+      </span>
+      <div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div>
+    </li>`;
+  }); h+=`</ul>`; }
+  root.innerHTML=h;
+  const add=()=>{const inp=root.querySelector('.devInput'),v=inp.value.trim();if(!v)return;
+    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('devices');renderDevices(root);root.querySelector('.devInput').focus();toast('Added');};
+  root.querySelector('.devAddBtn').onclick=add;
+  root.querySelector('.devInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
+  $$('.dev-chk',root).forEach(b=>b.onclick=()=>{const id=b.dataset.id;syncSet('deviceDone',id,(SAVE.deviceDone&&SAVE.deviceDone[id])?null:1);renderDevices(root);});
+  $$('.dev-del',root).forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.id;
+    SAVE.devices=SAVE.devices.filter(d=>d.id!==id);syncField('devices');
+    syncSet('deviceDone',id,null);syncSet('deviceCount',id,null);syncSet('itemHL','d:'+id,null);syncSet('itemNote','d:'+id,null);
+    renderDevices(root);toast('Removed');});
+  $$('.dev-count',root).forEach(inp=>{ inp.onclick=e=>e.stopPropagation();
+    inp.onchange=()=>{const id=inp.dataset.id,v=inp.value.trim();syncSet('deviceCount',id,v===''?null:Number(v));}; });
+  wireEditable(root);
 }
 /* highlight + note controls shared by totes, materials tables, devices */
 function wireEditable(root){
@@ -1201,7 +1231,7 @@ function wireTotes(root){
     toast(`Removed ${OWN[rm]?OWN[rm].name:'owner'}`);
     reflowOwner(cid,b);
   });
-  $$('.devices-open',root).forEach(b=>b.onclick=e=>{e.stopPropagation();go('setup');});
+  $$('.devices-tote .devbody',root).forEach(el=>renderDevices(el));
 }
 function renderPacking(){
   $('#packControls').innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
@@ -1211,25 +1241,42 @@ function renderPacking(){
   $$('#packControls .packtoggle span').forEach(s=>s.onclick=()=>{packGroup=s.dataset.g;renderPacking();});
   const groups={};
   DATA.containers.forEach(c=>{
-    let key;
-    if(packGroup==='week') key=(c.week==='core'?'Camp-Core · all summer':'Week '+c.week+' · '+(WK[c.week]?WK[c.week].title:''));
-    else if(packGroup==='owner'){const ids=ownersOf(c.id).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b)); key=ids.length?ids.map(id=>OWN[id].name).join(' & '):'Unassigned';}
-    else key=c.zone;
+    if(packGroup==='owner'){
+      // a card with multiple owners appears under EACH owner's name
+      const ids=ownersOf(c.id).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b));
+      if(!ids.length){(groups['Unassigned']=groups['Unassigned']||[]).push(c);}
+      else ids.forEach(id=>{const k=OWN[id].name;(groups[k]=groups[k]||[]).push(c);});
+      return;
+    }
+    const key = packGroup==='week' ? (c.week==='core'?'Camp-Core · all summer':'Week '+c.week+' · '+(WK[c.week]?WK[c.week].title:'')) : c.zone;
     (groups[key]=groups[key]||[]).push(c);
   });
   let order=Object.keys(groups);
   if(packGroup==='week')order.sort((a,b)=>{const na=a.startsWith('Camp')?-1:+(a.match(/\d+/)||[99])[0];const nb=b.startsWith('Camp')?-1:+(b.match(/\d+/)||[99])[0];return na-nb;});
-  else if(packGroup==='owner'){const rank=n=>{if(n==='Unassigned')return 99;const f=n.split(' & ')[0];const i=PACK_OWNERS.map(id=>OWN[id]&&OWN[id].name).indexOf(f);return i<0?50:i;};order.sort((a,b)=>rank(a)-rank(b));}
+  else if(packGroup==='owner'){const rank=n=>{if(n==='Unassigned')return 99;const i=PACK_OWNERS.map(id=>OWN[id]&&OWN[id].name).indexOf(n);return i<0?50:i;};order.sort((a,b)=>rank(a)-rank(b));}
   else order.sort();
   let h='';
   order.forEach(g=>{
     let zc='var(--ink)';
     if(packGroup==='zone') zc=DATA.zone_colors[g]||'#888';
-    else if(packGroup==='owner'){const o=DATA.owners.find(o=>o.name===g.split(' & ')[0]); zc=o?o.color:'#94a3b8';}
-    h+=`<div class="packgroup"><div class="gh"><span class="zsw" style="background:${zc}"></span>${esc(g)} <span class="muted" style="font-size:.8rem;font-weight:400">· ${groups[g].length}</span></div>
+    else if(packGroup==='owner'){const o=DATA.owners.find(o=>o.name===g); zc=o?o.color:'#94a3b8';}
+    // "assign whole week to one person" — only in By-week view
+    let gassign='';
+    if(packGroup==='week'){
+      const gw=groups[g][0]&&groups[g][0].week;
+      gassign=`<select class="grpassign" data-w="${esc(String(gw))}" title="Assign every tote in this week to one person"><option value="">Assign all →</option>${PACK_OWNERS.map(id=>OWN[id]).filter(Boolean).map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('')}<option value="__clear">Clear all</option></select>`;
+    }
+    h+=`<div class="packgroup"><div class="gh"><span class="zsw" style="background:${zc}"></span>${esc(g)} <span class="muted" style="font-size:.8rem;font-weight:400">· ${groups[g].length}</span>${gassign}</div>
       <div class="totes">${groups[g].map(toteHTML).join('')}</div></div>`;
   });
   $('#packBody').innerHTML=h;
+  $$('#packBody .grpassign').forEach(s=>s.onchange=()=>{
+    const w=s.dataset.w, v=s.value; if(!v)return;
+    const list=DATA.containers.filter(c=>String(c.week)===String(w)&&c.kind==='pack');
+    if(v==='__clear'){ list.forEach(c=>syncSet('toteOwners',c.id,null)); if(w!=='core')syncSet('weekOwners',w,null); toast(`Cleared ${list.length} totes`); }
+    else { list.forEach(c=>syncSet('toteOwners',c.id,[v])); if(w!=='core')syncSet('weekOwners',w,v); toast(`${list.length} totes → ${OWN[v].name}`); }
+    renderPacking();
+  });
   wireTotes($('#packBody'));
 }
 
@@ -1269,52 +1316,6 @@ function seedDevices(){
   if(SAVE.toteOwners['devices-card']==null) SAVE.toteOwners['devices-card']=['julianne','zara'];
   SAVE.devSeeded='v3'; persist();
 }
-function renderSetup(){
-  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{};
-  const body=$('#setupBody');
-  let h=`<div class="sec-head"><span class="eyebrow">Setup</span><h2>Devices &amp; Tech</h2></div>
-    <p class="sec-sub">Everything that plugs in, charges, connects, or boots up. For each item, enter how many are <b>available</b> and check it off to confirm. Highlight what's urgent, and leave a note or question on anything. Add your own items too. Saves in this browser.</p>
-    <div class="dev-add"><input id="devInput" placeholder="Add a device or tech item…  (e.g. iPad cart, Wi-Fi router, PA speaker)" autocomplete="off"><button class="btn" id="devAddBtn">Add</button></div>`;
-  if(!SAVE.devices.length){
-    h+=`<div class="card muted" style="margin-top:16px;max-width:760px">Nothing here yet. Add your first device or tech item above — then check it off, highlight it, or attach a note.</div>`;
-  } else {
-    const done=SAVE.devices.filter(d=>SAVE.deviceDone[d.id]).length;
-    h+=`<div class="dev-prog mono">${done}/${SAVE.devices.length} confirmed</div><ul class="devlist">`;
-    SAVE.devices.forEach(d=>{
-      const key='d:'+d.id, dn=!!SAVE.deviceDone[d.id];
-      const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]), note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
-      const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
-      h+=`<li class="devrow ${dn?'dn':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}">
-        <span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span>
-        <span class="iname">${esc(d.name)}</span>
-        <span class="dev-qty"><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="dev-qty-lbl">available</span></span>
-        <span class="iacts">
-          <button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button>
-          <button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button>
-          <button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button>
-        </span>
-        <div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div>
-      </li>`;
-    });
-    h+=`</ul>`;
-  }
-  body.innerHTML=h;
-  const add=()=>{const inp=$('#devInput'),v=inp.value.trim();if(!v)return;
-    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('devices');renderSetup();$('#devInput').focus();toast('Added');};
-  $('#devAddBtn').onclick=add;
-  $('#devInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
-  $$('.dev-chk',body).forEach(b=>b.onclick=()=>{const id=b.dataset.id;syncSet('deviceDone',id,(SAVE.deviceDone&&SAVE.deviceDone[id])?null:1);renderSetup();});
-  $$('.dev-del',body).forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.id;
-    SAVE.devices=SAVE.devices.filter(d=>d.id!==id);syncField('devices');
-    syncSet('deviceDone',id,null);syncSet('deviceCount',id,null);syncSet('itemHL','d:'+id,null);syncSet('itemNote','d:'+id,null);
-    renderSetup();toast('Removed');});
-  $$('.dev-count',body).forEach(inp=>{
-    inp.onclick=e=>e.stopPropagation();
-    inp.onchange=()=>{const id=inp.dataset.id,v=inp.value.trim();syncSet('deviceCount',id,v===''?null:Number(v));};
-  });
-  wireEditable(body);
-}
-
 /* ============ COUNTDOWN ============ */
 const CAMP_START=new Date('2026-06-29T08:00:00-04:00');  // Mon Jun 29 · 8am ET
 const CAMP_END=new Date('2026-08-28T20:00:00-04:00');    // Fri Aug 28 · 8pm ET (post-bonfire)
