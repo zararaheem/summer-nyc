@@ -229,6 +229,12 @@ section{padding:34px 0}
 .tote .lid .lbl{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:.82rem;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .tote .lid .comp{font-size:.8rem;font-weight:600;opacity:.95}
 .tote .lid .zinfo{font-family:'Spline Sans Mono',monospace;font-size:.62rem;opacity:.8;text-transform:uppercase;letter-spacing:.08em}
+.tote .lid .owner{display:flex;align-items:center;gap:6px;margin-top:6px}
+.tote .lid .odot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
+.tote .ownsel-tote{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:.72rem;color:#fff;background-color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:2px 21px 2px 9px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background-color .15s;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
+.tote .ownsel-tote:hover{background-color:rgba(255,255,255,.34)}
+.tote .ownsel-tote.unassigned{background-color:rgba(255,255,255,.1);border-style:dashed;color:rgba(255,255,255,.85);font-weight:600}
+.tote .ownsel-tote option{color:var(--ink);background:#fff;font-weight:600}
 .tote .clearbox{background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(230,240,250,.35));padding:0}
 .tote .contents{list-style:none;padding:10px 14px;max-height:230px;overflow:auto}
 .tote .contents li{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;padding:4px 0;border-bottom:1px dashed var(--line)}
@@ -493,7 +499,7 @@ const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'
 
 /* ---- persistence (localStorage; graceful fallback) ---- */
 const STORE_KEY='alphaOdyssey2026';
-let SAVE={done:{},owners:{},packed:{}};
+let SAVE={done:{},owners:{},packed:{},toteOwners:{}};
 try{const raw=localStorage.getItem(STORE_KEY); if(raw) SAVE=Object.assign(SAVE,JSON.parse(raw));}catch(e){}
 if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
@@ -988,10 +994,17 @@ function toteHTML(c){
   const packed=c.contents.map((it,i)=>!!(SAVE.packed[c.id]&&SAVE.packed[c.id][i]));
   const n=packed.filter(Boolean).length;
   const badges=[c.persistent?`<span class="badge2 b-persist">All-summer</span>`:'', c.zone==='Identifiers'?`<span class="badge2 b-keep">Kids keep</span>`:''].join('');
+  const oid=(SAVE.toteOwners&&SAVE.toteOwners[c.id])||''; const o=oid?OWN[oid]:null;
+  const ownerPick=`<div class="owner"><span class="odot" style="background:${o?o.color:'transparent'}"></span>
+    <select class="ownsel-tote ${o?'':'unassigned'}" data-c="${c.id}" title="Who packs this tote">
+      <option value="" ${o?'':'selected'}>+ Assign owner</option>
+      ${DATA.owners.map(x=>`<option value="${x.id}" ${x.id===oid?'selected':''}>${esc(x.name)}</option>`).join('')}
+    </select></div>`;
   return `<div class="tote" data-c="${c.id}"><div class="lid" style="background:${c.color}">
     <div class="lbl"><span>${esc(c.label)}</span>${badges}</div>
     <div class="comp">${esc(c.component)}</div>
-    <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div></div>
+    <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div>
+    ${ownerPick}</div>
     <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>`<li class="${packed[i]?'pk':''}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}</li>`).join('')}</ul></div>
     <div class="foot"><span class="mono">${n}/${c.contents.length}</span><span class="miniprog"><i style="width:${c.contents.length?n/c.contents.length*100:0}%"></i></span></div></div>`;
 }
@@ -1003,6 +1016,18 @@ function wireTotes(root){
     persist();
     const tote=b.closest('.tote');const c=DATA.containers.find(x=>x.id===cid);
     tote.outerHTML=toteHTML(c);wireTotes(root);
+  });
+  $$('.ownsel-tote',root).forEach(s=>{
+    s.onclick=e=>e.stopPropagation();
+    s.onchange=()=>{
+      const cid=s.dataset.c;
+      SAVE.toteOwners=SAVE.toteOwners||{};
+      if(s.value)SAVE.toteOwners[cid]=s.value; else delete SAVE.toteOwners[cid];
+      persist();
+      const c=DATA.containers.find(x=>x.id===cid);
+      s.closest('.tote').outerHTML=toteHTML(c);wireTotes(root);
+      toast(s.value?`Owner: ${OWN[s.value].name}`:'Owner cleared');
+    };
   });
 }
 function renderPacking(){
