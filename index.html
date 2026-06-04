@@ -235,6 +235,35 @@ section{padding:34px 0}
 .tote .ownsel-tote:hover{background-color:rgba(255,255,255,.34)}
 .tote .ownsel-tote.unassigned{background-color:rgba(255,255,255,.1);border-style:dashed;color:rgba(255,255,255,.85);font-weight:600}
 .tote .ownsel-tote option{color:var(--ink);background:#fff;font-weight:600}
+/* ---- editable list items: highlight + note ---- */
+.iacts{display:inline-flex;gap:3px;align-items:center}
+.tote .iacts{margin-left:auto}
+.mat-tbl .iacts{float:right;margin-left:8px}
+.iact{appearance:none;border:1px solid var(--line2);background:var(--paper);color:var(--ink3);width:21px;height:21px;border-radius:5px;cursor:pointer;font-size:.72rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.iact:hover{background:var(--paper2);color:var(--ink)}
+.iact.ihl.on{background:#ffe16a;border-color:#e6c33a;color:#5a4a00}
+.iact.inote-btn.on{background:#dbeafe;border-color:#9bc2f0;color:#1c4f80}
+.iact.dev-del:hover{background:#fde9e4;border-color:var(--coral);color:var(--coral-d)}
+.inote-row{flex-basis:100%;width:100%;margin-top:5px;clear:both}
+.inote{width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:.78rem;border:1px solid var(--line2);border-radius:6px;padding:4px 8px;background:#fffef6;color:var(--ink)}
+.inote:focus{outline:none;border-color:var(--blue);background:#fff}
+.tote .contents li{flex-wrap:wrap}
+.tote li.hl{background:rgba(255,225,106,.5);border-radius:6px;padding-left:5px;padding-right:5px}
+tr.mrow.hl td{background:rgba(255,225,106,.4)}
+/* ---- setup: devices & tech ---- */
+.dev-add{display:flex;gap:9px;margin-top:18px;max-width:640px}
+.dev-add input{flex:1;font-family:'Hanken Grotesk',sans-serif;font-size:.92rem;border:1px solid var(--line2);border-radius:9px;padding:9px 13px;background:var(--card);color:var(--ink)}
+.dev-add input:focus{outline:none;border-color:var(--blue)}
+.dev-prog{margin:18px 0 8px;font-size:.78rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.08em}
+.devlist{list-style:none;max-width:760px;display:flex;flex-direction:column;gap:7px}
+.devrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:11px 14px}
+.devrow.hl{background:rgba(255,225,106,.4);border-color:#e6c33a}
+.devrow .iname{flex:1;font-weight:600}
+.devrow.dn .iname{text-decoration:line-through;color:var(--ink3);font-weight:500}
+.devrow .pbox{width:18px;height:18px;border:1.5px solid var(--line2);border-radius:5px;flex-shrink:0;cursor:pointer;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.devrow .pbox.on{background:var(--kelly);border-color:var(--kelly)}
+.devrow .pbox svg{width:11px;height:11px;opacity:0}
+.devrow .pbox.on svg{opacity:1}
 .tote .clearbox{background:linear-gradient(135deg,rgba(255,255,255,.5),rgba(230,240,250,.35));padding:0}
 .tote .contents{list-style:none;padding:10px 14px;max-height:230px;overflow:auto}
 .tote .contents li{display:flex;gap:8px;align-items:flex-start;font-size:.82rem;padding:4px 0;border-bottom:1px dashed var(--line)}
@@ -483,6 +512,13 @@ footer{padding:40px 0 60px;color:var(--ink3);font-size:.8rem;border-top:1px soli
   </section>
 </div></div>
 
+<!-- SETUP -->
+<div class="view" id="v-setup"><div class="wrap">
+  <section style="padding-top:26px">
+    <div id="setupBody"></div>
+  </section>
+</div></div>
+
 <footer><div class="wrap" id="footer"></div></footer>
 <div class="toast" id="toast"></div>
 
@@ -499,14 +535,14 @@ const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'
 
 /* ---- persistence (localStorage; graceful fallback) ---- */
 const STORE_KEY='alphaOdyssey2026';
-let SAVE={done:{},owners:{},packed:{},toteOwners:{}};
+let SAVE={done:{},owners:{},packed:{},toteOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{}};
 try{const raw=localStorage.getItem(STORE_KEY); if(raw) SAVE=Object.assign(SAVE,JSON.parse(raw));}catch(e){}
 if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
 
 /* ---- router ---- */
-const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests']];
+const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests'],['setup','Setup']];
 let state={view:'overview',week:1,wtab:'challenge'};
 function buildNav(){
   $('#navTabs').innerHTML=VIEWS.map(([id,lbl])=>{
@@ -525,7 +561,7 @@ function go(v){
   $$('#navTabs .nav-tab').forEach(t=>t.classList.toggle('active',t.dataset.v===v));
   window.scrollTo({top:0});
   if(v==='overview')renderOverview(); if(v==='weeks')renderWeeks();
-  if(v==='todo')renderTodo(); if(v==='packing')renderPacking(); if(v==='quests')renderQuests();
+  if(v==='todo')renderTodo(); if(v==='packing')renderPacking(); if(v==='quests')renderQuests(); if(v==='setup')renderSetup();
 }
 
 /* ============ OVERVIEW ============ */
@@ -615,7 +651,7 @@ function renderWeeks(){
   const pane=$('#weekPane');
   if(state.wtab==='challenge')pane.innerHTML=weekChallenge(w);
   else if(state.wtab==='schedule')pane.innerHTML=weekSchedule(w);
-  else if(state.wtab==='materials')pane.innerHTML=weekMaterials(w);
+  else if(state.wtab==='materials'){pane.innerHTML=weekMaterials(w);wireEditable(pane);}
   else if(state.wtab==='talent'){pane.innerHTML=weekTalent(w);wireTalent(pane);}
   else if(state.wtab==='todo'){pane.innerHTML=`<div id="wkTodo"></div>`;renderTaskList($('#wkTodo'),wkTasks,true);}
   else if(state.wtab==='packing'){pane.innerHTML=wkCont.length?`<div class="totes">${wkCont.map(toteHTML).join('')}</div>`:`<div class="card muted">No containers for this week.</div>`;wireTotes(pane);}
@@ -654,16 +690,17 @@ function weekSchedule(w){
 }
 function weekMaterials(w){
   let h=`<p class="sec-sub">From the canonical materials list. <span class="srcflag src-rental">Rental</span> = vendor/rental · <span class="srcflag src-have">Have</span> = existing inventory · prices: $ &lt;10 · $$ 10–50 · $$$ 50–200 · $$$$ 200+.</p>`;
-  w.materials.sections.forEach(s=>{
+  w.materials.sections.forEach((s,si)=>{
     const items=s.items.filter(it=>it.source!=='manuel');
     const isManuel=s.manuel||(s.items.length&&s.items.every(it=>it.source==='manuel'));
     h+=`<div class="mat-sec"><h4>${esc(s.section)}</h4>`;
     if(items.length){
       h+=`<table class="mat-tbl"><thead><tr><th style="width:30%">Item</th><th>Qty</th><th>$</th><th>Purpose</th><th>Src</th></tr></thead><tbody>`;
-      items.forEach(it=>{
+      items.forEach((it,ii)=>{
         const links=(it.links||[]).map(l=>`<a href="${esc(l.url)}" target="_blank">${esc(l.text.replace(/^Amazon:?\s*/i,'').replace(/^Etsy:?\s*/i,'').slice(0,15))}↗</a>`).join(' ');
         const sf=it.source==='rental'?`<span class="srcflag src-rental">Rent</span>`:it.source==='have'?`<span class="srcflag src-have">Have</span>`:(it.custom?`<span class="srcflag" style="background:#fde9e4;color:var(--coral-d)">Custom</span>`:'');
-        h+=`<tr><td><span class="nm">${esc(it.name)}</span>${links?`<div class="linklist" style="margin-top:3px">${links}</div>`:''}</td>
+        const key='m:'+w.num+':'+si+':'+ii;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+        h+=`<tr class="mrow ${hl?'hl':''}" data-k="${esc(key)}"><td><span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><span class="nm">${esc(it.name)}</span>${links?`<div class="linklist" style="margin-top:3px">${links}</div>`:''}<div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></td>
           <td class="qtybadge">${esc(it.qty)}</td><td class="tier">${esc(it.tier)}</td><td style="font-size:.84rem;color:var(--ink2)">${esc(it.purpose)}</td><td>${sf}</td></tr>`;
       });
       h+=`</tbody></table>`;
@@ -1005,10 +1042,39 @@ function toteHTML(c){
     <div class="comp">${esc(c.component)}</div>
     <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div>
     ${ownerPick}</div>
-    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>`<li class="${packed[i]?'pk':''}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}</li>`).join('')}</ul></div>
+    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>{const key='t:'+c.id+':'+i;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';return `<li class="${packed[i]?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}<span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;}).join('')}</ul></div>
     <div class="foot"><span class="mono">${n}/${c.contents.length}</span><span class="miniprog"><i style="width:${c.contents.length?n/c.contents.length*100:0}%"></i></span></div></div>`;
 }
+/* highlight + note controls shared by totes, materials tables, devices */
+function wireEditable(root){
+  $$('.ihl',root).forEach(btn=>btn.onclick=e=>{
+    e.stopPropagation();
+    const host=btn.closest('[data-k]'); if(!host)return; const key=host.dataset.k;
+    SAVE.itemHL=SAVE.itemHL||{};
+    if(SAVE.itemHL[key]){delete SAVE.itemHL[key];host.classList.remove('hl');btn.classList.remove('on');}
+    else{SAVE.itemHL[key]=1;host.classList.add('hl');btn.classList.add('on');}
+    persist();
+  });
+  $$('.inote-btn',root).forEach(btn=>btn.onclick=e=>{
+    e.stopPropagation();
+    const host=btn.closest('[data-k]'); if(!host)return; const row=host.querySelector('.inote-row'); const inp=row.querySelector('.inote');
+    if(!row.hasAttribute('hidden') && !inp.value.trim())row.setAttribute('hidden','');
+    else{row.removeAttribute('hidden');inp.focus();}
+  });
+  $$('.inote',root).forEach(inp=>{
+    inp.onclick=e=>e.stopPropagation();
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();inp.blur();}};
+    inp.onblur=()=>{
+      const host=inp.closest('[data-k]'); if(!host)return; const key=host.dataset.k; const v=inp.value.trim();
+      SAVE.itemNote=SAVE.itemNote||{};
+      if(v)SAVE.itemNote[key]=v; else{delete SAVE.itemNote[key];host.querySelector('.inote-row').setAttribute('hidden','');}
+      host.querySelector('.inote-btn').classList.toggle('on',!!v);
+      persist();
+    };
+  });
+}
 function wireTotes(root){
+  wireEditable(root);
   $$('.pbox',root).forEach(b=>b.onclick=()=>{
     const cid=b.dataset.c,i=+b.dataset.i;
     SAVE.packed[cid]=SAVE.packed[cid]||{};
@@ -1071,6 +1137,47 @@ function renderQuests(){
   $('#questsBody').innerHTML=h;
   $$('#questsBody .sqlevels .wpill').forEach(p=>p.onclick=()=>{sqLevel=p.dataset.l;renderQuests();});
   $$('#questsBody .quest-h').forEach(hh=>hh.onclick=()=>hh.parentElement.classList.toggle('open'));
+}
+
+/* ============ SETUP · DEVICES & TECH ============ */
+function renderSetup(){
+  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{};
+  const body=$('#setupBody');
+  let h=`<div class="sec-head"><span class="eyebrow">Setup</span><h2>Devices &amp; Tech</h2></div>
+    <p class="sec-sub">Everything that plugs in, charges, connects, or boots up. Add items as you go — check one off when it's sorted, highlight what's urgent, and leave a note or question on anything. Saves in this browser.</p>
+    <div class="dev-add"><input id="devInput" placeholder="Add a device or tech item…  (e.g. iPad cart, Wi-Fi router, PA speaker)" autocomplete="off"><button class="btn" id="devAddBtn">Add</button></div>`;
+  if(!SAVE.devices.length){
+    h+=`<div class="card muted" style="margin-top:16px;max-width:760px">Nothing here yet. Add your first device or tech item above — then check it off, highlight it, or attach a note.</div>`;
+  } else {
+    const done=SAVE.devices.filter(d=>SAVE.deviceDone[d.id]).length;
+    h+=`<div class="dev-prog mono">${done}/${SAVE.devices.length} sorted</div><ul class="devlist">`;
+    SAVE.devices.forEach(d=>{
+      const key='d:'+d.id, dn=!!SAVE.deviceDone[d.id];
+      const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]), note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+      h+=`<li class="devrow ${dn?'dn':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}">
+        <span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span>
+        <span class="iname">${esc(d.name)}</span>
+        <span class="iacts">
+          <button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button>
+          <button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button>
+          <button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button>
+        </span>
+        <div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div>
+      </li>`;
+    });
+    h+=`</ul>`;
+  }
+  body.innerHTML=h;
+  const add=()=>{const inp=$('#devInput'),v=inp.value.trim();if(!v)return;
+    SAVE.devices.push({id:'dev'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});persist();renderSetup();$('#devInput').focus();toast('Added');};
+  $('#devAddBtn').onclick=add;
+  $('#devInput').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();add();}};
+  $$('.dev-chk',body).forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(SAVE.deviceDone[id])delete SAVE.deviceDone[id];else SAVE.deviceDone[id]=1;persist();renderSetup();});
+  $$('.dev-del',body).forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.id;
+    SAVE.devices=SAVE.devices.filter(d=>d.id!==id);delete SAVE.deviceDone[id];
+    if(SAVE.itemHL)delete SAVE.itemHL['d:'+id];if(SAVE.itemNote)delete SAVE.itemNote['d:'+id];
+    persist();renderSetup();toast('Removed');});
+  wireEditable(body);
 }
 
 /* ============ COUNTDOWN ============ */
