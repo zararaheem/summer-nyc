@@ -122,6 +122,12 @@ section{padding:34px 0}
 .wkhead h2{font-size:2.1rem;font-weight:800;margin:4px 0 2px}
 .wkhead .sub{font-family:'Fraunces',serif;font-style:italic;color:var(--ink2);font-size:1.05rem}
 .wkhead .meta{display:flex;gap:8px 20px;flex-wrap:wrap;font-family:'Spline Sans Mono',monospace;font-size:.72rem;color:var(--ink3);margin-top:10px}
+.wkowner{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;background:var(--card);border:1px solid var(--line2);border-radius:11px;padding:9px 13px;width:fit-content;max-width:100%}
+.wkowner-lbl{font-family:'Spline Sans Mono',monospace;font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--ink3);font-weight:700}
+.wkowner .odot{width:11px;height:11px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px var(--line2)}
+.wkownsel{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:.86rem;color:var(--ink);background:var(--paper);border:1px solid var(--line2);border-radius:8px;padding:5px 26px 5px 11px;cursor:pointer;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%2334415a' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 9px center}
+.wkownsel:focus{outline:none;border-color:var(--blue)}
+.wkowner-note{font-size:.74rem;color:var(--ink3)}
 .subtabs{display:flex;gap:3px;flex-wrap:wrap;border-bottom:1px solid var(--line2);margin:16px 0 20px}
 .subtab{font-weight:600;font-size:.85rem;color:var(--ink3);padding:9px 15px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s}
 .subtab:hover{color:var(--ink)}
@@ -542,14 +548,14 @@ const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'
 
 /* ---- persistence (localStorage; graceful fallback) ---- */
 const STORE_KEY='alphaOdyssey2026';
-let SAVE={done:{},owners:{},packed:{},toteOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{}};
+let SAVE={done:{},owners:{},packed:{},toteOwners:{},weekOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{}};
 try{const raw=localStorage.getItem(STORE_KEY); if(raw) SAVE=Object.assign(SAVE,JSON.parse(raw));}catch(e){}
 if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
 
 /* ---- shared sync via /api/state (Vercel KV); gracefully local-only if unavailable ---- */
-const SHARED_FIELDS=['toteOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount'];
+const SHARED_FIELDS=['toteOwners','weekOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount'];
 let SYNC_OK=false; const _opQ=[]; let _flushT=null;
 function _enqueue(op){ if(!SYNC_OK)return; _opQ.push(op); if(!_flushT)_flushT=setTimeout(_flush,350); }
 async function _flush(){ _flushT=null; if(!_opQ.length)return; const ops=_opQ.splice(0);
@@ -680,9 +686,23 @@ function renderWeeks(){
   $('#weekSel').innerHTML=DATA.weeks.map(w=>`<span class="wpill ${w.num===state.week?'active':''}" data-w="${w.num}">W${w.num}<span style="opacity:.6;font-weight:500;font-family:inherit"> · ${esc(w.title.split(' ')[0].replace('SERHANT.','Serhant'))}</span></span>`).join('');
   $$('#weekSel .wpill').forEach(p=>p.onclick=()=>{state.week=+p.dataset.w;renderWeeks();});
   const w=WK[state.week];
+  const woid=(SAVE.weekOwners&&SAVE.weekOwners[w.num])||''; const wo=woid?OWN[woid]:null;
+  const wkPackN=DATA.containers.filter(c=>c.week===w.num&&c.kind==='pack').length;
+  const woMenu=`<div class="wkowner"><span class="wkowner-lbl">Week owner</span><span class="odot" style="background:${wo?wo.color:'transparent'}"></span>
+    <select id="wkOwnerSel" class="wkownsel">
+      <option value="" ${wo?'':'selected'}>— Unassigned —</option>
+      ${PACK_OWNERS.map(id=>OWN[id]).filter(Boolean).map(x=>`<option value="${x.id}" ${x.id===woid?'selected':''}>${esc(x.name)}</option>`).join('')}
+    </select><span class="wkowner-note">applies to all ${wkPackN} tote${wkPackN===1?'':'s'} this week</span></div>`;
   $('#weekHead').innerHTML=`<div class="wkhead"><div class="wn">Week ${w.num} · ${esc(w.dates)}</div>
     <h2>${esc(w.title)}</h2><div class="sub">${esc(w.sub)}</div>
-    <div class="meta"><span>📍 ${esc(w.loc)}</span><span>🏁 ${esc(w.finale)}</span></div></div>`;
+    <div class="meta"><span>📍 ${esc(w.loc)}</span><span>🏁 ${esc(w.finale)}</span></div>${woMenu}</div>`;
+  $('#wkOwnerSel').onchange=function(){
+    const v=this.value;
+    syncSet('weekOwners',w.num,v||null);
+    DATA.containers.filter(c=>c.week===w.num&&c.kind==='pack').forEach(c=>syncSet('toteOwners',c.id,v||null));
+    toast(v?`Week ${w.num} → ${OWN[v].name} (${wkPackN} totes)`:`Week ${w.num} owners cleared`);
+    renderWeeks();
+  };
   const wkTasks=DATA.tasks.filter(t=>t.week===w.num);
   const wkCont=DATA.containers.filter(c=>c.week===w.num);
   const wkTalent=w.talent||[];
