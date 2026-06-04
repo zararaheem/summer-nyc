@@ -1140,6 +1140,14 @@ function renderQuests(){
 }
 
 /* ============ SETUP · DEVICES & TECH ============ */
+// Known kit, pre-loaded on first visit. Editable/deletable; won't re-add once seeded.
+const DEVICE_SEED=['iPads','Apple Pencils','iPad charging cart','Over-ear headphones','Wi-Fi router + range extender'];
+function seedDevices(){
+  if(SAVE.devSeeded)return;
+  SAVE.devices=SAVE.devices||[];
+  DEVICE_SEED.forEach(name=>{ if(!SAVE.devices.some(d=>d.name===name)) SAVE.devices.push({id:'dev'+Math.random().toString(36).slice(2,9),name}); });
+  SAVE.devSeeded=1; persist();
+}
 function renderSetup(){
   SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{};
   const body=$('#setupBody');
@@ -1249,6 +1257,7 @@ tickCountdown(); setInterval(tickCountdown,1000);
 
 /* ============ FOOTER + BOOT ============ */
 $('#footer').innerHTML=`<b>The Alpha Odyssey — Hamptons 2026.</b> Built from the canonical program files (materials, challenges, daily schedule). Week 7 = SERHANT (Aug 10–14); Week 8 = Concert (Aug 17–21). Your checklists and owner edits save in this browser. · ${DATA.tasks.length} tasks · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.side_quests.length} side quests.`;
+seedDevices();
 buildNav();
 renderOverview();
 
