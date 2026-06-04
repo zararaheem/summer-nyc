@@ -237,10 +237,19 @@ section{padding:34px 0}
 .tote .lid .zinfo{font-family:'Spline Sans Mono',monospace;font-size:.62rem;opacity:.8;text-transform:uppercase;letter-spacing:.08em}
 .tote .lid .owner{display:flex;align-items:center;gap:6px;margin-top:6px}
 .tote .lid .odot{width:9px;height:9px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 1.5px rgba(255,255,255,.55)}
-.tote .ownsel-tote{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:.72rem;color:#fff;background-color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:2px 21px 2px 9px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background-color .15s;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
-.tote .ownsel-tote:hover{background-color:rgba(255,255,255,.34)}
-.tote .ownsel-tote.unassigned{background-color:rgba(255,255,255,.1);border-style:dashed;color:rgba(255,255,255,.85);font-weight:600}
-.tote .ownsel-tote option{color:var(--ink);background:#fff;font-weight:600}
+.tote .owner{flex-wrap:wrap;gap:5px}
+.tote .ochip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.42);color:#fff;font-weight:700;font-size:.72rem;border-radius:999px;padding:2px 5px 2px 8px}
+.tote .ochip-x{appearance:none;border:none;background:transparent;color:#fff;opacity:.75;cursor:pointer;font-size:.9rem;line-height:1;padding:0 1px;margin-left:1px}
+.tote .ochip-x:hover{opacity:1}
+.tote .ownadd{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:.72rem;color:#fff;background-color:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:2px 21px 2px 9px;cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;transition:background-color .15s;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 7px center}
+.tote .ownadd:hover{background-color:rgba(255,255,255,.34)}
+.tote .ownadd.unassigned{background-color:rgba(255,255,255,.1);border-style:dashed;color:rgba(255,255,255,.85);font-weight:600}
+.tote .ownadd option{color:var(--ink);background:#fff;font-weight:600}
+.tote .dbox{width:16px;height:16px;border:1.5px solid var(--line2);border-radius:4px;flex-shrink:0;margin-top:1px;background:var(--paper);display:flex;align-items:center;justify-content:center}
+.tote .dbox.on{background:var(--kelly);border-color:var(--kelly)}
+.tote .dbox svg{width:10px;height:10px;opacity:0}
+.tote .dbox.on svg{opacity:1}
+.devices-tote .lid{background:linear-gradient(135deg,#0a2240,#1c6db5)!important}
 /* ---- editable list items: highlight + note ---- */
 .iacts{display:inline-flex;gap:3px;align-items:center}
 .tote .iacts{margin-left:auto}
@@ -542,6 +551,19 @@ const esc=s=>(s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;
 const CHK='<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 const OWN={}; DATA.owners.forEach(o=>OWN[o.id]=o);
 const PACK_OWNERS=['alice','julianne','zara'];  // operations leads who own totes
+// synthetic "Devices & Tech" card that lives in the Packing > Camp-Core group
+DATA.containers.unshift({id:'devices-card',kind:'devices',week:'core',zone:'Tech & Devices',color:'#0a2240',label:'AO · CORE · DEVICES',component:'Devices & Tech'});
+// owners can be a single id (legacy) or an array; normalize to an array
+function ownersOf(cid){ const v=SAVE.toteOwners&&SAVE.toteOwners[cid]; if(v==null)return []; return Array.isArray(v)?v.slice():[v]; }
+function ownerRank(id){ const i=PACK_OWNERS.indexOf(id); return i<0?50:i; }
+// shared multi-owner picker shown on a tote's colored lid
+function ownerPickHTML(cid){
+  const ids=ownersOf(cid).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b));
+  const chips=ids.map(id=>{const o=OWN[id];return `<span class="ochip"><span class="odot" style="background:${o.color}"></span>${esc(o.name)}<button class="ochip-x" data-c="${esc(cid)}" data-o="${esc(id)}" title="Remove">×</button></span>`;}).join('');
+  const remaining=PACK_OWNERS.map(i=>OWN[i]).filter(o=>o&&!ids.includes(o.id));
+  const addSel=remaining.length?`<select class="ownadd ${ids.length?'':'unassigned'}" data-c="${esc(cid)}" title="Add owner"><option value="" selected>${ids.length?'+ owner':'+ Assign owner'}</option>${remaining.map(o=>`<option value="${o.id}">${esc(o.name)}</option>`).join('')}</select>`:'';
+  return `<div class="owner">${chips}${addSel}</div>`;
+}
 const WK={}; DATA.weeks.forEach(w=>WK[w.num]=w);
 const ROLE_COLORS={A:'#0a2240',R:'#1d854a',S:'#1c6db5',O:'#d99a24',N:'#94a3b8'};
 const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'Notified'};
@@ -571,9 +593,9 @@ async function hydrate(){
     const r=await fetch('/api/state',{cache:'no-store'}); if(!r.ok)throw new Error('no kv');
     const remote=await r.json(); SYNC_OK=true;
     SHARED_FIELDS.forEach(f=>{ if(remote[f]!==undefined)SAVE[f]=remote[f]; });
-    if(remote.devSeeded)SAVE.devSeeded='v2';
+    if(remote.devSeeded)SAVE.devSeeded='v3';
     persist();
-    if(!SAVE.devices||!SAVE.devices.length){ seedDevices(); syncField('devices'); _enqueue({field:'devSeeded',value:true}); }
+    if(!SAVE.devices||!SAVE.devices.length){ seedDevices(); syncField('devices'); syncField('toteOwners'); _enqueue({field:'devSeeded',value:true}); }
   }catch(e){ SYNC_OK=false; }
   return SYNC_OK;
 }
@@ -699,7 +721,7 @@ function renderWeeks(){
   $('#wkOwnerSel').onchange=function(){
     const v=this.value;
     syncSet('weekOwners',w.num,v||null);
-    DATA.containers.filter(c=>c.week===w.num&&c.kind==='pack').forEach(c=>syncSet('toteOwners',c.id,v||null));
+    DATA.containers.filter(c=>c.week===w.num&&c.kind==='pack').forEach(c=>syncSet('toteOwners',c.id,v?[v]:null));
     toast(v?`Week ${w.num} → ${OWN[v].name} (${wkPackN} totes)`:`Week ${w.num} owners cleared`);
     renderWeeks();
   };
@@ -1087,6 +1109,7 @@ function renderTaskList(root,tasks,editable){
 /* ============ PACKING ============ */
 let packGroup='week';
 function toteHTML(c){
+  if(c.kind==='devices')return devicesCardHTML(c);
   if(c.kind!=='pack'){
     return `<div class="tote info"><div class="lid" style="background:${c.color}"><div class="lbl">${esc(c.label)}</div><div class="comp">${esc(c.component)}</div><div class="zinfo">${c.kind==='manuel'?'🪵 Build scope':'📦 Rental / vendor'}</div></div>
       <div class="clearbox"><div class="note">${esc(c.note||'')}</div></div></div>`;
@@ -1094,12 +1117,7 @@ function toteHTML(c){
   const packed=c.contents.map((it,i)=>!!(SAVE.packed&&SAVE.packed[c.id+':'+i]));
   const n=packed.filter(Boolean).length;
   const badges=[c.persistent?`<span class="badge2 b-persist">All-summer</span>`:'', c.zone==='Identifiers'?`<span class="badge2 b-keep">Kids keep</span>`:''].join('');
-  const oid=(SAVE.toteOwners&&SAVE.toteOwners[c.id])||''; const o=oid?OWN[oid]:null;
-  const ownerPick=`<div class="owner"><span class="odot" style="background:${o?o.color:'transparent'}"></span>
-    <select class="ownsel-tote ${o?'':'unassigned'}" data-c="${c.id}" title="Who packs this tote">
-      <option value="" ${o?'':'selected'}>+ Assign owner</option>
-      ${PACK_OWNERS.map(id=>OWN[id]).filter(Boolean).map(x=>`<option value="${x.id}" ${x.id===oid?'selected':''}>${esc(x.name)}</option>`).join('')}
-    </select></div>`;
+  const ownerPick=ownerPickHTML(c.id);
   return `<div class="tote" data-c="${c.id}"><div class="lid" style="background:${c.color}">
     <div class="lbl"><span>${esc(c.label)}</span>${badges}</div>
     <div class="comp">${esc(c.component)}</div>
@@ -1107,6 +1125,23 @@ function toteHTML(c){
     ${ownerPick}</div>
     <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>{const key='t:'+c.id+':'+i;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';return `<li class="${packed[i]?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}<span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;}).join('')}</ul></div>
     <div class="foot"><span class="mono">${n}/${c.contents.length}</span><span class="miniprog"><i style="width:${c.contents.length?n/c.contents.length*100:0}%"></i></span></div></div>`;
+}
+// Devices & Tech card for the Packing > Camp-Core group — mirrors the Setup list (read-only here)
+function devicesCardHTML(c){
+  const devs=SAVE.devices||[];
+  const done=devs.filter(d=>SAVE.deviceDone&&SAVE.deviceDone[d.id]).length;
+  const rows=devs.length?devs.map(d=>{
+    const dn=!!(SAVE.deviceDone&&SAVE.deviceDone[d.id]);
+    const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
+    return `<li class="${dn?'pk':''}"><span class="dbox ${dn?'on':''}">${CHK}</span><span class="iname">${esc(d.name)}</span>${cnt!==''?`<span class="iqty">${esc(cnt)} avail</span>`:''}</li>`;
+  }).join(''):`<li class="muted" style="padding:6px 2px">No devices yet — add them in Setup.</li>`;
+  return `<div class="tote devices-tote" data-c="${esc(c.id)}"><div class="lid" style="background:${c.color}">
+    <div class="lbl"><span>${esc(c.label)}</span><span class="badge2 b-keep">Setup</span></div>
+    <div class="comp">${esc(c.component)}</div>
+    <div class="zinfo">All summer · Tech</div>
+    ${ownerPickHTML(c.id)}</div>
+    <div class="clearbox"><ul class="contents">${rows}</ul></div>
+    <div class="foot"><span class="mono">${done}/${devs.length} confirmed</span><button class="btn ghost devices-open" style="margin-left:auto;font-size:.72rem;padding:4px 10px">Open Devices &amp; Tech →</button></div></div>`;
 }
 /* highlight + note controls shared by totes, materials tables, devices */
 function wireEditable(root){
@@ -1143,41 +1178,54 @@ function wireTotes(root){
     const tote=b.closest('.tote');const c=DATA.containers.find(x=>x.id===cid);
     tote.outerHTML=toteHTML(c);wireTotes(root);
   });
-  $$('.ownsel-tote',root).forEach(s=>{
+  const reflowOwner=(cid,el)=>{
+    if(state.view==='packing'&&packGroup==='owner'&&root===$('#packBody')){renderPacking();return;}
+    const c=DATA.containers.find(x=>x.id===cid);
+    el.closest('.tote').outerHTML=toteHTML(c);wireTotes(root);
+  };
+  $$('.ownadd',root).forEach(s=>{
     s.onclick=e=>e.stopPropagation();
     s.onchange=()=>{
-      const cid=s.dataset.c;
-      syncSet('toteOwners',cid,s.value||null);
-      toast(s.value?`Owner: ${OWN[s.value].name}`:'Owner cleared');
-      if(state.view==='packing'&&packGroup==='owner'&&root===$('#packBody')){renderPacking();return;}
-      const c=DATA.containers.find(x=>x.id===cid);
-      s.closest('.tote').outerHTML=toteHTML(c);wireTotes(root);
+      const cid=s.dataset.c, add=s.value; if(!add)return;
+      const ids=ownersOf(cid); if(!ids.includes(add))ids.push(add);
+      syncSet('toteOwners',cid,ids);
+      toast(`Owner: ${OWN[add].name}`);
+      reflowOwner(cid,s);
     };
   });
+  $$('.ochip-x',root).forEach(b=>b.onclick=e=>{
+    e.stopPropagation();
+    const cid=b.dataset.c, rm=b.dataset.o;
+    const ids=ownersOf(cid).filter(id=>id!==rm);
+    syncSet('toteOwners',cid,ids.length?ids:null);
+    toast(`Removed ${OWN[rm]?OWN[rm].name:'owner'}`);
+    reflowOwner(cid,b);
+  });
+  $$('.devices-open',root).forEach(b=>b.onclick=e=>{e.stopPropagation();go('setup');});
 }
 function renderPacking(){
   $('#packControls').innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <div class="packtoggle"><span class="${packGroup==='week'?'active':''}" data-g="week">By week</span><span class="${packGroup==='zone'?'active':''}" data-g="zone">By storage zone</span><span class="${packGroup==='owner'?'active':''}" data-g="owner">By owner</span></div>
-    <span class="muted" style="font-size:.82rem">Label scheme <code>AO · W# · COMPONENT · ##</code> · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.containers.filter(c=>c.kind!=='pack').length} build/rental flags</span>
+    <span class="muted" style="font-size:.82rem">Label scheme <code>AO · W# · COMPONENT · ##</code> · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.containers.filter(c=>c.kind!=='pack'&&c.kind!=='devices').length} build/rental flags</span>
     <button class="btn ghost" style="margin-left:auto" onclick="window.print()">⎙ Print pick list</button></div>`;
   $$('#packControls .packtoggle span').forEach(s=>s.onclick=()=>{packGroup=s.dataset.g;renderPacking();});
   const groups={};
   DATA.containers.forEach(c=>{
     let key;
     if(packGroup==='week') key=(c.week==='core'?'Camp-Core · all summer':'Week '+c.week+' · '+(WK[c.week]?WK[c.week].title:''));
-    else if(packGroup==='owner'){const oid=SAVE.toteOwners&&SAVE.toteOwners[c.id]; key=(oid&&OWN[oid])?OWN[oid].name:'Unassigned';}
+    else if(packGroup==='owner'){const ids=ownersOf(c.id).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b)); key=ids.length?ids.map(id=>OWN[id].name).join(' & '):'Unassigned';}
     else key=c.zone;
     (groups[key]=groups[key]||[]).push(c);
   });
   let order=Object.keys(groups);
   if(packGroup==='week')order.sort((a,b)=>{const na=a.startsWith('Camp')?-1:+(a.match(/\d+/)||[99])[0];const nb=b.startsWith('Camp')?-1:+(b.match(/\d+/)||[99])[0];return na-nb;});
-  else if(packGroup==='owner'){const rank=n=>{if(n==='Unassigned')return 99;const i=PACK_OWNERS.map(id=>OWN[id]&&OWN[id].name).indexOf(n);return i<0?50:i;};order.sort((a,b)=>rank(a)-rank(b));}
+  else if(packGroup==='owner'){const rank=n=>{if(n==='Unassigned')return 99;const f=n.split(' & ')[0];const i=PACK_OWNERS.map(id=>OWN[id]&&OWN[id].name).indexOf(f);return i<0?50:i;};order.sort((a,b)=>rank(a)-rank(b));}
   else order.sort();
   let h='';
   order.forEach(g=>{
     let zc='var(--ink)';
     if(packGroup==='zone') zc=DATA.zone_colors[g]||'#888';
-    else if(packGroup==='owner'){const o=DATA.owners.find(o=>o.name===g); zc=o?o.color:'#94a3b8';}
+    else if(packGroup==='owner'){const o=DATA.owners.find(o=>o.name===g.split(' & ')[0]); zc=o?o.color:'#94a3b8';}
     h+=`<div class="packgroup"><div class="gh"><span class="zsw" style="background:${zc}"></span>${esc(g)} <span class="muted" style="font-size:.8rem;font-weight:400">· ${groups[g].length}</span></div>
       <div class="totes">${groups[g].map(toteHTML).join('')}</div></div>`;
   });
@@ -1209,8 +1257,8 @@ function renderQuests(){
 const DEVICE_SEED=['iPads','Apple Pencils','iPad chargers','Laptops','Headphones','Laptop chargers','Charging cart'];
 const DEVICE_OLD=['iPad charging cart','Over-ear headphones','Wi-Fi router + range extender'];
 function seedDevices(){
-  if(SAVE.devSeeded==='v2')return;
-  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{}; SAVE.deviceCount=SAVE.deviceCount||{};
+  if(SAVE.devSeeded==='v3')return;
+  SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{}; SAVE.deviceCount=SAVE.deviceCount||{}; SAVE.toteOwners=SAVE.toteOwners||{};
   // drop earlier placeholder items, but only if the user never touched them
   SAVE.devices=SAVE.devices.filter(d=>{
     if(!DEVICE_OLD.includes(d.name))return true;
@@ -1218,7 +1266,8 @@ function seedDevices(){
     return SAVE.deviceDone[d.id]||(SAVE.itemHL&&SAVE.itemHL[k])||(SAVE.itemNote&&SAVE.itemNote[k])||(SAVE.deviceCount[d.id]!=null);
   });
   DEVICE_SEED.forEach(name=>{ if(!SAVE.devices.some(d=>d.name===name)) SAVE.devices.push({id:'dev'+Math.random().toString(36).slice(2,9),name}); });
-  SAVE.devSeeded='v2'; persist();
+  if(SAVE.toteOwners['devices-card']==null) SAVE.toteOwners['devices-card']=['julianne','zara'];
+  SAVE.devSeeded='v3'; persist();
 }
 function renderSetup(){
   SAVE.devices=SAVE.devices||[]; SAVE.deviceDone=SAVE.deviceDone||{};
