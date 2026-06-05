@@ -268,15 +268,27 @@ section{padding:34px 0}
 .mat-tbl .iacts{float:right;margin-left:8px}
 .iact{appearance:none;border:1px solid var(--line2);background:var(--paper);color:var(--ink3);width:21px;height:21px;border-radius:5px;cursor:pointer;font-size:.72rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0;flex-shrink:0}
 .iact:hover{background:var(--paper2);color:var(--ink)}
-.iact.ihl.on{background:#ffe16a;border-color:#e6c33a;color:#5a4a00}
+.iact.ihl.on{background:var(--hl,#ffe16a);border-color:rgba(0,0,0,.18);color:var(--ink)}
 .iact.inote-btn.on{background:#dbeafe;border-color:#9bc2f0;color:#1c4f80}
 .iact.dev-del:hover{background:#fde9e4;border-color:var(--coral);color:var(--coral-d)}
 .inote-row{flex-basis:100%;width:100%;margin-top:5px;clear:both}
 .inote{width:100%;font-family:'Hanken Grotesk',sans-serif;font-size:.78rem;border:1px solid var(--line2);border-radius:6px;padding:4px 8px;background:#fffef6;color:var(--ink)}
 .inote:focus{outline:none;border-color:var(--blue);background:#fff}
 .tote .contents li{flex-wrap:wrap}
-.tote li.hl{background:rgba(255,225,106,.5);border-radius:6px;padding-left:5px;padding-right:5px}
-tr.mrow.hl td{background:rgba(255,225,106,.4)}
+.tote li.hl{background:var(--hl);border-radius:6px;padding-left:5px;padding-right:5px}
+tr.mrow.hl td{background:var(--hl)}
+/* highlight colors (pastel-neon) — set a CSS var consumed by the rules above */
+.hl-yellow{--hl:rgba(255,221,87,.62)}
+.hl-blue{--hl:rgba(99,210,255,.55)}
+.hl-pink{--hl:rgba(255,143,196,.5)}
+.hl-orange{--hl:rgba(255,176,92,.6)}
+.hl-green{--hl:rgba(120,229,150,.55)}
+/* highlight color popup */
+.hlpop{position:absolute;z-index:600;display:flex;gap:6px;background:var(--card);border:1px solid var(--line2);border-radius:11px;padding:7px 8px;box-shadow:0 10px 28px rgba(28,40,64,.2)}
+.hlsw{width:23px;height:23px;border-radius:7px;border:1px solid rgba(0,0,0,.14);cursor:pointer;padding:0;background:var(--hl,#fff);display:flex;align-items:center;justify-content:center;font-size:.8rem;color:var(--ink3);transition:transform .1s}
+.hlsw:hover{transform:scale(1.12)}
+.hlsw.sel{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink2)}
+.hlsw.hlclear{--hl:#fff;font-weight:700}
 /* ---- setup: devices & tech ---- */
 .dev-add{display:flex;gap:9px;margin-top:18px;max-width:640px}
 .dev-add input{flex:1;font-family:'Hanken Grotesk',sans-serif;font-size:.92rem;border:1px solid var(--line2);border-radius:9px;padding:9px 13px;background:var(--card);color:var(--ink)}
@@ -808,8 +820,8 @@ function weekMaterials(w){
       items.forEach((it,ii)=>{
         const links=(it.links||[]).map(l=>`<a href="${esc(l.url)}" target="_blank">${esc(l.text.replace(/^Amazon:?\s*/i,'').replace(/^Etsy:?\s*/i,'').slice(0,15))}↗</a>`).join(' ');
         const sf=it.source==='rental'?`<span class="srcflag src-rental">Rent</span>`:it.source==='have'?`<span class="srcflag src-have">Have</span>`:(it.custom?`<span class="srcflag" style="background:#fde9e4;color:var(--coral-d)">Custom</span>`:'');
-        const key='m:'+w.num+':'+si+':'+ii;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
-        h+=`<tr class="mrow ${hl?'hl':''}" data-k="${esc(key)}"><td><span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><span class="nm">${esc(it.name)}</span>${links?`<div class="linklist" style="margin-top:3px">${links}</div>`:''}<div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></td>
+        const key='m:'+w.num+':'+si+':'+ii;const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+        h+=`<tr class="mrow${hlCls(key)}" data-k="${esc(key)}"><td><span class="iacts"><button class="${ihlCls(key)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><span class="nm">${esc(it.name)}</span>${links?`<div class="linklist" style="margin-top:3px">${links}</div>`:''}<div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></td>
           <td class="qtybadge">${esc(it.qty)}</td><td class="tier">${esc(it.tier)}</td><td style="font-size:.84rem;color:var(--ink2)">${esc(it.purpose)}</td><td>${sf}</td></tr>`;
       });
       h+=`</tbody></table>`;
@@ -1147,7 +1159,7 @@ function toteHTML(c){
     <div class="comp">${esc(c.component)}</div>
     <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div>
     ${ownerPick}</div>
-    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>{const key='t:'+c.id+':'+i;const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]);const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';return `<li class="${packed[i]?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}<span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;}).join('')}</ul></div>
+    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>{const key='t:'+c.id+':'+i;const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';return `<li class="${packed[i]?'pk':''}${hlCls(key)}" data-k="${esc(key)}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}<span class="iacts"><button class="${ihlCls(key)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;}).join('')}</ul></div>
     <div class="foot"><span class="mono">${n}/${c.contents.length}</span><span class="miniprog"><i style="width:${c.contents.length?n/c.contents.length*100:0}%"></i></span></div></div>`;
 }
 // Devices & Tech card for the Packing > Camp-Core group — mirrors the Setup list (read-only here)
@@ -1165,9 +1177,9 @@ function renderDevices(root){
   const devs=SAVE.devices, done=devs.filter(d=>SAVE.deviceDone[d.id]).length;
   const items=devs.map(d=>{
     const key='d:'+d.id, dn=!!SAVE.deviceDone[d.id];
-    const hl=!!(SAVE.itemHL&&SAVE.itemHL[key]), note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+    const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
     const cnt=(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'';
-    return `<li class="${dn?'pk':''} ${hl?'hl':''}" data-k="${esc(key)}" data-id="${esc(d.id)}"><span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span><span class="iname">${esc(d.name)}</span><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="iacts"><button class="iact ihl ${hl?'on':''}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button><button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
+    return `<li class="${dn?'pk':''}${hlCls(key)}" data-k="${esc(key)}" data-id="${esc(d.id)}"><span class="pbox dev-chk ${dn?'on':''}" data-id="${esc(d.id)}">${CHK}</span><span class="iname">${esc(d.name)}</span><input class="dev-count" type="number" min="0" inputmode="numeric" placeholder="#" value="${esc(String(cnt))}" data-id="${esc(d.id)}" title="How many available"><span class="iacts"><button class="${ihlCls(key)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button><button class="iact dev-del" title="Delete" data-id="${esc(d.id)}">✕</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
   }).join('');
   root.innerHTML=`<ul class="contents devcontents">${items}<li class="dev-addrow"><span class="dev-plus">+</span><input class="devInput" placeholder="Add device or tech…" autocomplete="off"></li></ul>
     <div class="foot"><span class="mono">${done}/${devs.length} confirmed · # = available</span><span class="miniprog"><i style="width:${devs.length?done/devs.length*100:0}%"></i></span></div>`;
@@ -1183,14 +1195,40 @@ function renderDevices(root){
     inp.onchange=()=>{const id=inp.dataset.id,v=inp.value.trim();syncSet('deviceCount',id,v===''?null:Number(v));}; });
   wireEditable(root);
 }
+/* ---- highlight colors + color-picker popup ---- */
+const HL_COLORS=['yellow','blue','pink','orange','green'];
+function hlColor(key){ const v=SAVE.itemHL&&SAVE.itemHL[key]; if(!v)return ''; return (typeof v==='string'&&HL_COLORS.includes(v))?v:'yellow'; }
+function hlCls(key){ const c=hlColor(key); return c?(' hl hl-'+c):''; }            // host (li / tr) classes
+function ihlCls(key){ const c=hlColor(key); return 'iact ihl'+(c?(' on hl-'+c):''); } // highlight-button classes
+let _hlPop=null;
+function closeHLPop(){ if(_hlPop){_hlPop.remove();_hlPop=null;document.removeEventListener('mousedown',_hlOutside,true);document.removeEventListener('keydown',_hlKey,true);window.removeEventListener('resize',closeHLPop);} }
+function _hlOutside(e){ if(_hlPop&&!_hlPop.contains(e.target))closeHLPop(); }
+function _hlKey(e){ if(e.key==='Escape')closeHLPop(); }
+function openHLPop(btn,key,host){
+  const cur=hlColor(key); closeHLPop();
+  const pop=document.createElement('div'); pop.className='hlpop'; _hlPop=pop;
+  pop.innerHTML=HL_COLORS.map(c=>`<button class="hlsw hl-${c}${c===cur?' sel':''}" data-c="${c}" title="${c}"></button>`).join('')
+    +`<button class="hlsw hlclear${cur?'':' sel'}" data-c="" title="No highlight">✕</button>`;
+  document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect();
+  let left=window.scrollX+r.left, top=window.scrollY+r.bottom+6;
+  left=Math.min(left, window.scrollX+document.documentElement.clientWidth-pop.offsetWidth-8);
+  pop.style.left=Math.max(8,left)+'px'; pop.style.top=top+'px';
+  pop.querySelectorAll('.hlsw').forEach(s=>s.onclick=ev=>{ ev.stopPropagation();
+    const c=s.dataset.c;
+    host.classList.remove('hl'); HL_COLORS.forEach(k=>host.classList.remove('hl-'+k));
+    btn.classList.remove('on'); HL_COLORS.forEach(k=>btn.classList.remove('hl-'+k));
+    if(c){ host.classList.add('hl','hl-'+c); btn.classList.add('on','hl-'+c); }
+    syncSet('itemHL',key,c||null); closeHLPop();
+  });
+  setTimeout(()=>{document.addEventListener('mousedown',_hlOutside,true);document.addEventListener('keydown',_hlKey,true);window.addEventListener('resize',closeHLPop);},0);
+}
 /* highlight + note controls shared by totes, materials tables, devices */
 function wireEditable(root){
   $$('.ihl',root).forEach(btn=>btn.onclick=e=>{
     e.stopPropagation();
-    const host=btn.closest('[data-k]'); if(!host)return; const key=host.dataset.k;
-    const on=!(SAVE.itemHL&&SAVE.itemHL[key]);
-    host.classList.toggle('hl',on);btn.classList.toggle('on',on);
-    syncSet('itemHL',key,on?1:null);
+    const host=btn.closest('[data-k]'); if(!host)return;
+    openHLPop(btn,host.dataset.k,host);
   });
   $$('.inote-btn',root).forEach(btn=>btn.onclick=e=>{
     e.stopPropagation();
