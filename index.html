@@ -41,6 +41,8 @@ h1,h2,h3,h4{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.01em;l
 .nav-tab.active{background:var(--ink);color:#fff}
 .nav-tab .n{font-family:'Spline Sans Mono',monospace;font-size:.72rem;opacity:.6;margin-left:5px}
 .nav-tab.active .n{opacity:.7}
+.guidebtn{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-weight:700;font-size:.82rem;color:#fff;background:var(--coral);border:1px solid var(--coral-d);padding:8px 14px;border-radius:9px;text-decoration:none;transition:.15s}
+.guidebtn:hover{background:var(--coral-d);text-decoration:none}
 
 /* ---------- HERO ---------- */
 .hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line2);
@@ -515,6 +517,7 @@ footer{padding:40px 0 60px;color:var(--ink3);font-size:.8rem;border-top:1px soli
   <div class="brand">The Alpha <b>Odyssey</b></div>
   <span class="cd-mini" id="cdMini" title="Time to camp opening"><span class="pulse"></span><span id="cdMiniText">—</span></span>
   <div class="nav-tabs" id="navTabs"></div>
+  <a class="guidebtn" href="https://alpha-odyssey-guide-hub.vercel.app/" target="_blank" rel="noopener">📖 Guide Hub ↗</a>
 </div></div>
 
 <!-- OVERVIEW -->
@@ -671,7 +674,8 @@ function startPolling(){ setInterval(async()=>{
 }, 12000); }
 
 /* ---- router ---- */
-const VIEWS=[['overview','Overview'],['weeks','Weeks'],['todo','Command Center'],['packing','Packing'],['quests','Quests']];
+// Overview / Weeks / Command Center archived — kept renderable but off the tab bar
+const VIEWS=[['packing','Packing'],['quests','Quests']];
 let state={view:'overview',week:1,wtab:'challenge'};
 function buildNav(){
   $('#navTabs').innerHTML=VIEWS.map(([id,lbl])=>{
