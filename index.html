@@ -250,6 +250,18 @@ section{padding:34px 0}
 .tote .dbox svg{width:10px;height:10px;opacity:0}
 .tote .dbox.on svg{opacity:1}
 .devices-tote .lid{background:linear-gradient(135deg,#0a2240,#1c6db5)!important}
+/* custom (user-added) cards */
+.btn.newcard{background:var(--kelly);border-color:var(--kelly-d);color:#fff;font-weight:700}
+.btn.newcard:hover{background:var(--kelly-d)}
+.customcard .cardtitle{width:100%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);border-radius:7px;color:#fff;font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:.82rem;letter-spacing:.02em;padding:4px 8px}
+.customcard .cardtitle:focus{outline:none;background:rgba(255,255,255,.28)}
+.customcard .cardtitle::placeholder{color:rgba(255,255,255,.7)}
+.customcard .cardmeta{display:flex;align-items:center;gap:8px;margin-top:7px}
+.customcard .cardweek{appearance:none;-webkit-appearance:none;font-family:'Hanken Grotesk',sans-serif;font-size:.72rem;font-weight:700;color:#fff;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);border-radius:7px;padding:3px 9px;cursor:pointer}
+.customcard .cardweek option{color:var(--ink);background:#fff}
+.customcard .carddel{margin-left:auto;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.32);color:#fff;border-radius:7px;font-size:.68rem;font-weight:600;padding:3px 9px;cursor:pointer}
+.customcard .carddel:hover{background:var(--coral)}
+.customcard .citem-del:hover{background:#fde9e4;border-color:var(--coral);color:var(--coral-d)}
 .devices-tote .devbody{padding:0}
 .devcontents .dev-count{width:42px;font-family:'Spline Sans Mono',monospace;font-size:.72rem;font-weight:600;text-align:center;border:1px solid var(--line2);border-radius:5px;padding:2px 3px;background:var(--paper);color:var(--ink)}
 .devcontents .dev-count:focus{outline:none;border-color:var(--blue);background:#fff}
@@ -570,6 +582,9 @@ const OWN={}; DATA.owners.forEach(o=>OWN[o.id]=o);
 const PACK_OWNERS=['alice','julianne','zara'];  // operations leads who own totes
 // synthetic "Devices & Tech" card that lives in the Packing > Camp-Core group
 DATA.containers.unshift({id:'devices-card',kind:'devices',week:'core',zone:'Tech & Devices',color:'#0a2240',label:'AO · CORE · DEVICES',component:'Devices & Tech'});
+// all packing cards = built-in containers + user-added custom cards
+function allContainers(){ return DATA.containers.concat(SAVE.cards||[]); }
+function findContainer(id){ return DATA.containers.find(x=>x.id===id) || (SAVE.cards||[]).find(x=>x.id===id); }
 // owners can be a single id (legacy) or an array; normalize to an array
 function ownersOf(cid){ const v=SAVE.toteOwners&&SAVE.toteOwners[cid]; if(v==null)return []; return Array.isArray(v)?v.slice():[v]; }
 function ownerRank(id){ const i=PACK_OWNERS.indexOf(id); return i<0?50:i; }
@@ -587,14 +602,14 @@ const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'
 
 /* ---- persistence (localStorage; graceful fallback) ---- */
 const STORE_KEY='alphaOdyssey2026';
-let SAVE={done:{},owners:{},packed:{},toteOwners:{},weekOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{}};
+let SAVE={done:{},owners:{},packed:{},toteOwners:{},weekOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{},cards:[]};
 try{const raw=localStorage.getItem(STORE_KEY); if(raw) SAVE=Object.assign(SAVE,JSON.parse(raw));}catch(e){}
 if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
 
 /* ---- shared sync via /api/state (Vercel KV); gracefully local-only if unavailable ---- */
-const SHARED_FIELDS=['toteOwners','weekOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount'];
+const SHARED_FIELDS=['toteOwners','weekOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount','cards'];
 let SYNC_OK=false; const _opQ=[]; let _flushT=null;
 function _enqueue(op){ if(!SYNC_OK)return; _opQ.push(op); if(!_flushT)_flushT=setTimeout(_flush,350); }
 async function _flush(){ _flushT=null; if(!_opQ.length)return; const ops=_opQ.splice(0);
@@ -1146,6 +1161,7 @@ function renderTaskList(root,tasks,editable){
 let packGroup='week';
 function toteHTML(c){
   if(c.kind==='devices')return devicesCardHTML(c);
+  if(c.kind==='custom')return customCardHTML(c);
   if(c.kind!=='pack'){
     return `<div class="tote info"><div class="lid" style="background:${c.color}"><div class="lbl">${esc(c.label)}</div><div class="comp">${esc(c.component)}</div><div class="zinfo">${c.kind==='manuel'?'🪵 Build scope':'📦 Rental / vendor'}</div></div>
       <div class="clearbox"><div class="note">${esc(c.note||'')}</div></div></div>`;
@@ -1170,6 +1186,23 @@ function devicesCardHTML(c){
     <div class="zinfo">All summer · Tech</div>
     ${ownerPickHTML(c.id)}</div>
     <div class="clearbox"><div class="devbody"></div></div></div>`;
+}
+// A user-added custom card (e.g. "Pool supplies"): editable title, phase, owners, item list
+function customCardHTML(c){
+  const items=c.items||[];
+  const packedN=items.filter(it=>SAVE.packed&&SAVE.packed[c.id+':'+it.id]).length;
+  const wkOpts=[['pre','Pre-camp'],['core','Camp-Core · all summer']].concat(DATA.weeks.map(w=>[String(w.num),'Week '+w.num])).map(([v,l])=>`<option value="${v}" ${String(c.week)===v?'selected':''}>${esc(l)}</option>`).join('');
+  const rows=items.map(it=>{
+    const key='t:'+c.id+':'+it.id, pk=!!(SAVE.packed&&SAVE.packed[c.id+':'+it.id]);
+    const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
+    return `<li class="${pk?'pk':''}${hlCls(key)}" data-k="${esc(key)}" data-i="${esc(it.id)}"><span class="pbox ${pk?'on':''}" data-c="${esc(c.id)}" data-i="${esc(it.id)}">${CHK}</span><span class="iname">${esc(it.name)}</span><span class="iacts"><button class="${ihlCls(key)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button><button class="iact citem-del" data-c="${esc(c.id)}" data-i="${esc(it.id)}" title="Delete item">✕</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
+  }).join('');
+  return `<div class="tote customcard" data-c="${esc(c.id)}"><div class="lid" style="background:${c.color||'#475569'}">
+    <input class="cardtitle" data-c="${esc(c.id)}" value="${esc(c.label)}" placeholder="Card title" title="Rename card">
+    <div class="cardmeta"><select class="cardweek" data-c="${esc(c.id)}" title="Phase / week">${wkOpts}</select><button class="carddel" data-c="${esc(c.id)}" title="Delete card">Delete</button></div>
+    ${ownerPickHTML(c.id)}</div>
+    <div class="clearbox"><ul class="contents">${rows}<li class="dev-addrow"><span class="dev-plus">+</span><input class="citem-add" data-c="${esc(c.id)}" placeholder="Add item…" autocomplete="off"></li></ul></div>
+    <div class="foot"><span class="mono">${packedN}/${items.length}</span><span class="miniprog"><i style="width:${items.length?packedN/items.length*100:0}%"></i></span></div></div>`;
 }
 // Compact editable Devices & Tech list, rendered into the card's .devbody (tote-sized)
 function renderDevices(root){
@@ -1250,17 +1283,34 @@ function wireEditable(root){
 function wireTotes(root){
   wireEditable(root);
   $$('.pbox',root).forEach(b=>b.onclick=()=>{
-    const cid=b.dataset.c,i=+b.dataset.i,key=cid+':'+i;
+    const cid=b.dataset.c,i=b.dataset.i,key=cid+':'+i;
     const on=!(SAVE.packed&&SAVE.packed[key]);
     syncSet('packed',key,on?1:null);
-    const tote=b.closest('.tote');const c=DATA.containers.find(x=>x.id===cid);
+    const tote=b.closest('.tote');const c=findContainer(cid);
     tote.outerHTML=toteHTML(c);wireTotes(root);
   });
   const reflowOwner=(cid,el)=>{
     if(state.view==='packing'&&packGroup==='owner'&&root===$('#packBody')){renderPacking();return;}
-    const c=DATA.containers.find(x=>x.id===cid);
+    const c=findContainer(cid);
     el.closest('.tote').outerHTML=toteHTML(c);wireTotes(root);
   };
+  // ---- custom card editing ----
+  $$('.cardtitle',root).forEach(inp=>{ inp.onclick=e=>e.stopPropagation();
+    inp.onchange=()=>{const c=findContainer(inp.dataset.c); if(c){c.label=inp.value.trim()||'Untitled card';syncField('cards');}};
+  });
+  $$('.cardweek',root).forEach(s=>{ s.onclick=e=>e.stopPropagation();
+    s.onchange=()=>{const c=findContainer(s.dataset.c); if(c){c.week=s.value;syncField('cards');renderPacking();}};
+  });
+  $$('.carddel',root).forEach(b=>b.onclick=e=>{e.stopPropagation();
+    if(!confirm('Delete this card?'))return;
+    SAVE.cards=(SAVE.cards||[]).filter(x=>x.id!==b.dataset.c);syncField('cards');renderPacking();toast('Card deleted');});
+  $$('.citem-add',root).forEach(inp=>{ inp.onclick=e=>e.stopPropagation();
+    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();const c=findContainer(inp.dataset.c),v=inp.value.trim();
+      if(c&&v){c.items=c.items||[];c.items.push({id:'it'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('cards');renderPacking();
+        const ni=$(`.citem-add[data-c="${c.id}"]`);if(ni)ni.focus();}}};
+  });
+  $$('.citem-del',root).forEach(b=>b.onclick=e=>{e.stopPropagation();const c=findContainer(b.dataset.c);
+    if(c){c.items=(c.items||[]).filter(it=>it.id!==b.dataset.i);syncField('cards');renderPacking();}});
   $$('.ownadd',root).forEach(s=>{
     s.onclick=e=>e.stopPropagation();
     s.onchange=()=>{
@@ -1285,10 +1335,17 @@ function renderPacking(){
   $('#packControls').innerHTML=`<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
     <div class="packtoggle"><span class="${packGroup==='week'?'active':''}" data-g="week">By week</span><span class="${packGroup==='zone'?'active':''}" data-g="zone">By storage zone</span><span class="${packGroup==='owner'?'active':''}" data-g="owner">By owner</span></div>
     <span class="muted" style="font-size:.82rem">Label scheme <code>AO · W# · COMPONENT · ##</code> · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.containers.filter(c=>c.kind!=='pack'&&c.kind!=='devices').length} build/rental flags</span>
-    <button class="btn ghost" style="margin-left:auto" onclick="window.print()">⎙ Print pick list</button></div>`;
+    <button class="btn newcard" style="margin-left:auto" id="newCardBtn">＋ New card</button>
+    <button class="btn ghost" onclick="window.print()">⎙ Print pick list</button></div>`;
   $$('#packControls .packtoggle span').forEach(s=>s.onclick=()=>{packGroup=s.dataset.g;renderPacking();});
+  $('#newCardBtn').onclick=()=>{
+    const id='card'+Date.now().toString(36)+Math.floor(Math.random()*1e3);
+    SAVE.cards=SAVE.cards||[]; SAVE.cards.unshift({id,kind:'custom',week:'pre',zone:'Added',color:'#475569',label:'New card',items:[]});
+    syncField('cards'); renderPacking();
+    const t=$(`.cardtitle[data-c="${id}"]`); if(t){t.focus();t.select();}
+  };
   const groups={};
-  DATA.containers.forEach(c=>{
+  allContainers().forEach(c=>{
     if(packGroup==='owner'){
       // a card with multiple owners appears under EACH owner's name
       const ids=ownersOf(c.id).filter(id=>OWN[id]).sort((a,b)=>ownerRank(a)-ownerRank(b));
@@ -1296,11 +1353,11 @@ function renderPacking(){
       else ids.forEach(id=>{const k=OWN[id].name;(groups[k]=groups[k]||[]).push(c);});
       return;
     }
-    const key = packGroup==='week' ? (c.week==='core'?'Camp-Core · all summer':'Week '+c.week+' · '+(WK[c.week]?WK[c.week].title:'')) : c.zone;
+    const key = packGroup==='week' ? (c.week==='pre'?'Pre-camp · setup':c.week==='core'?'Camp-Core · all summer':'Week '+c.week+' · '+(WK[c.week]?WK[c.week].title:'')) : c.zone;
     (groups[key]=groups[key]||[]).push(c);
   });
   let order=Object.keys(groups);
-  if(packGroup==='week')order.sort((a,b)=>{const na=a.startsWith('Camp')?-1:+(a.match(/\d+/)||[99])[0];const nb=b.startsWith('Camp')?-1:+(b.match(/\d+/)||[99])[0];return na-nb;});
+  if(packGroup==='week'){const rk=s=>s.startsWith('Pre-camp')?-2:s.startsWith('Camp')?-1:+(s.match(/\d+/)||[99])[0];order.sort((a,b)=>rk(a)-rk(b));}
   else if(packGroup==='owner'){const rank=n=>{if(n==='Unassigned')return 99;const i=PACK_OWNERS.map(id=>OWN[id]&&OWN[id].name).indexOf(n);return i<0?50:i;};order.sort((a,b)=>rank(a)-rank(b));}
   else order.sort();
   let h='';
@@ -1320,9 +1377,9 @@ function renderPacking(){
   $('#packBody').innerHTML=h;
   $$('#packBody .grpassign').forEach(s=>s.onchange=()=>{
     const w=s.dataset.w, v=s.value; if(!v)return;
-    const list=DATA.containers.filter(c=>String(c.week)===String(w)&&c.kind==='pack');
-    if(v==='__clear'){ list.forEach(c=>syncSet('toteOwners',c.id,null)); if(w!=='core')syncSet('weekOwners',w,null); toast(`Cleared ${list.length} totes`); }
-    else { list.forEach(c=>syncSet('toteOwners',c.id,[v])); if(w!=='core')syncSet('weekOwners',w,v); toast(`${list.length} totes → ${OWN[v].name}`); }
+    const list=allContainers().filter(c=>String(c.week)===String(w)&&(c.kind==='pack'||c.kind==='custom'));
+    if(v==='__clear'){ list.forEach(c=>syncSet('toteOwners',c.id,null)); if(w!=='core'&&w!=='pre')syncSet('weekOwners',w,null); toast(`Cleared ${list.length} cards`); }
+    else { list.forEach(c=>syncSet('toteOwners',c.id,[v])); if(w!=='core'&&w!=='pre')syncSet('weekOwners',w,v); toast(`${list.length} cards → ${OWN[v].name}`); }
     renderPacking();
   });
   wireTotes($('#packBody'));
