@@ -232,7 +232,7 @@ section{padding:34px 0}
 .totes{display:grid;grid-template-columns:repeat(auto-fill,minmax(265px,1fr));gap:13px}
 .tote{background:var(--card);border:1px solid var(--line2);border-radius:13px;overflow:hidden;display:flex;flex-direction:column;position:relative}
 .tote .lid{padding:11px 14px;color:#fff;display:flex;flex-direction:column;gap:2px}
-.tote .lid .lbl{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:.82rem;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tote .lid .lbl{font-family:'Spline Sans Mono',monospace;font-weight:600;font-size:.82rem;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;gap:8px;padding-right:20px}
 .tote .lid .comp{font-size:.8rem;font-weight:600;opacity:.95}
 .tote .lid .zinfo{font-family:'Spline Sans Mono',monospace;font-size:.62rem;opacity:.8;text-transform:uppercase;letter-spacing:.08em}
 .tote .lid .owner{display:flex;align-items:center;gap:6px;margin-top:6px}
@@ -262,6 +262,13 @@ section{padding:34px 0}
 .customcard .carddel{margin-left:auto;background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.32);color:#fff;border-radius:7px;font-size:.68rem;font-weight:600;padding:3px 9px;cursor:pointer}
 .customcard .carddel:hover{background:var(--coral)}
 .customcard .citem-del:hover{background:#fde9e4;border-color:var(--coral);color:var(--coral-d)}
+.citem-del:hover{background:#fde9e4;border-color:var(--coral);color:var(--coral-d)}
+/* card color button + swatches */
+.tote .lid{position:relative}
+.lidcolor{position:absolute;top:9px;right:9px;width:17px;height:17px;border-radius:50%;border:2px solid rgba(255,255,255,.75);background:rgba(255,255,255,.22);cursor:pointer;padding:0;z-index:3}
+.lidcolor:hover{background:rgba(255,255,255,.55)}
+.customcard .cardtitle{padding-right:28px}
+.hlsw.cardsw{border:1px solid rgba(0,0,0,.18)}
 .devices-tote .devbody{padding:0}
 .devcontents .dev-count{width:42px;font-family:'Spline Sans Mono',monospace;font-size:.72rem;font-weight:600;text-align:center;border:1px solid var(--line2);border-radius:5px;padding:2px 3px;background:var(--paper);color:var(--ink)}
 .devcontents .dev-count:focus{outline:none;border-color:var(--blue);background:#fff}
@@ -602,14 +609,14 @@ const ROLE_NAME={A:'Accountable',R:'Responsible',S:'Supporting',O:'Offering',N:'
 
 /* ---- persistence (localStorage; graceful fallback) ---- */
 const STORE_KEY='alphaOdyssey2026';
-let SAVE={done:{},owners:{},packed:{},toteOwners:{},weekOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{},cards:[]};
+let SAVE={done:{},owners:{},packed:{},toteOwners:{},weekOwners:{},itemHL:{},itemNote:{},devices:[],deviceDone:{},deviceCount:{},cards:[],extraItems:{},cardColors:{}};
 try{const raw=localStorage.getItem(STORE_KEY); if(raw) SAVE=Object.assign(SAVE,JSON.parse(raw));}catch(e){}
 if(!Array.isArray(SAVE.custom))SAVE.custom=[];
 function persist(){try{localStorage.setItem(STORE_KEY,JSON.stringify(SAVE));}catch(e){}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1600);}
 
 /* ---- shared sync via /api/state (Vercel KV); gracefully local-only if unavailable ---- */
-const SHARED_FIELDS=['toteOwners','weekOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount','cards'];
+const SHARED_FIELDS=['toteOwners','weekOwners','packed','itemHL','itemNote','devices','deviceDone','deviceCount','cards','extraItems','cardColors'];
 let SYNC_OK=false; const _opQ=[]; let _flushT=null;
 function _enqueue(op){ if(!SYNC_OK)return; _opQ.push(op); if(!_flushT)_flushT=setTimeout(_flush,350); }
 async function _flush(){ _flushT=null; if(!_opQ.length)return; const ops=_opQ.splice(0);
@@ -1166,17 +1173,23 @@ function toteHTML(c){
     return `<div class="tote info"><div class="lid" style="background:${c.color}"><div class="lbl">${esc(c.label)}</div><div class="comp">${esc(c.component)}</div><div class="zinfo">${c.kind==='manuel'?'🪵 Build scope':'📦 Rental / vendor'}</div></div>
       <div class="clearbox"><div class="note">${esc(c.note||'')}</div></div></div>`;
   }
-  const packed=c.contents.map((it,i)=>!!(SAVE.packed&&SAVE.packed[c.id+':'+i]));
-  const n=packed.filter(Boolean).length;
   const badges=[c.persistent?`<span class="badge2 b-persist">All-summer</span>`:'', c.zone==='Identifiers'?`<span class="badge2 b-keep">Kids keep</span>`:''].join('');
-  const ownerPick=ownerPickHTML(c.id);
-  return `<div class="tote" data-c="${c.id}"><div class="lid" style="background:${c.color}">
+  const lidColor=(SAVE.cardColors&&SAVE.cardColors[c.id])||c.color;
+  const orig=c.contents.map((it,i)=>({key:c.id+':'+i,dk:'t:'+c.id+':'+i,di:String(i),name:it.name,qty:it.qty,canDel:false}));
+  const extra=((SAVE.extraItems&&SAVE.extraItems[c.id])||[]).map(it=>({key:c.id+':e:'+it.id,dk:'t:'+c.id+':e:'+it.id,di:'e:'+it.id,name:it.name,qty:it.qty,canDel:true}));
+  const list=orig.concat(extra);
+  const n=list.filter(o=>SAVE.packed&&SAVE.packed[o.key]).length;
+  const rows=list.map(o=>{const pk=!!(SAVE.packed&&SAVE.packed[o.key]);const note=(SAVE.itemNote&&SAVE.itemNote[o.dk])||'';
+    return `<li class="${pk?'pk':''}${hlCls(o.dk)}" data-k="${esc(o.dk)}" data-i="${esc(o.di)}"><span class="pbox ${pk?'on':''}" data-c="${esc(c.id)}" data-i="${esc(o.di)}">${CHK}</span><span class="iname">${esc(o.name)}</span>${o.qty?`<span class="iqty">${esc(o.qty)}</span>`:''}<span class="iacts"><button class="${ihlCls(o.dk)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button>${o.canDel?`<button class="iact citem-del" data-c="${esc(c.id)}" data-i="${esc(o.di)}" title="Delete item">✕</button>`:''}</span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
+  }).join('');
+  return `<div class="tote" data-c="${c.id}"><div class="lid" style="background:${lidColor}">
+    <button class="lidcolor" data-c="${esc(c.id)}" title="Card color"></button>
     <div class="lbl"><span>${esc(c.label)}</span>${badges}</div>
     <div class="comp">${esc(c.component)}</div>
     <div class="zinfo">${esc(c.zone)}${c.week==='core'?' · Core':' · Week '+c.week}</div>
-    ${ownerPick}</div>
-    <div class="clearbox"><ul class="contents">${c.contents.map((it,i)=>{const key='t:'+c.id+':'+i;const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';return `<li class="${packed[i]?'pk':''}${hlCls(key)}" data-k="${esc(key)}" data-i="${i}"><span class="pbox ${packed[i]?'on':''}" data-c="${c.id}" data-i="${i}">${CHK}</span><span class="iname">${esc(it.name)}</span>${it.qty?`<span class="iqty">${esc(it.qty)}</span>`:''}<span class="iacts"><button class="${ihlCls(key)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;}).join('')}</ul></div>
-    <div class="foot"><span class="mono">${n}/${c.contents.length}</span><span class="miniprog"><i style="width:${c.contents.length?n/c.contents.length*100:0}%"></i></span></div></div>`;
+    ${ownerPickHTML(c.id)}</div>
+    <div class="clearbox"><ul class="contents">${rows}<li class="dev-addrow"><span class="dev-plus">+</span><input class="citem-add" data-c="${esc(c.id)}" placeholder="Add item…" autocomplete="off"></li></ul></div>
+    <div class="foot"><span class="mono">${n}/${list.length}</span><span class="miniprog"><i style="width:${list.length?n/list.length*100:0}%"></i></span></div></div>`;
 }
 // Devices & Tech card for the Packing > Camp-Core group — mirrors the Setup list (read-only here)
 function devicesCardHTML(c){
@@ -1197,7 +1210,9 @@ function customCardHTML(c){
     const note=(SAVE.itemNote&&SAVE.itemNote[key])||'';
     return `<li class="${pk?'pk':''}${hlCls(key)}" data-k="${esc(key)}" data-i="${esc(it.id)}"><span class="pbox ${pk?'on':''}" data-c="${esc(c.id)}" data-i="${esc(it.id)}">${CHK}</span><span class="iname">${esc(it.name)}</span><span class="iacts"><button class="${ihlCls(key)}" title="Highlight">▤</button><button class="iact inote-btn ${note?'on':''}" title="Add note / question">✎</button><button class="iact citem-del" data-c="${esc(c.id)}" data-i="${esc(it.id)}" title="Delete item">✕</button></span><div class="inote-row" ${note?'':'hidden'}><input class="inote" placeholder="Note or question…" value="${esc(note)}"></div></li>`;
   }).join('');
-  return `<div class="tote customcard" data-c="${esc(c.id)}"><div class="lid" style="background:${c.color||'#475569'}">
+  const lidColor=(SAVE.cardColors&&SAVE.cardColors[c.id])||c.color||'#475569';
+  return `<div class="tote customcard" data-c="${esc(c.id)}"><div class="lid" style="background:${lidColor}">
+    <button class="lidcolor" data-c="${esc(c.id)}" title="Card color"></button>
     <input class="cardtitle" data-c="${esc(c.id)}" value="${esc(c.label)}" placeholder="Card title" title="Rename card">
     <div class="cardmeta"><select class="cardweek" data-c="${esc(c.id)}" title="Phase / week">${wkOpts}</select><button class="carddel" data-c="${esc(c.id)}" title="Delete card">Delete</button></div>
     ${ownerPickHTML(c.id)}</div>
@@ -1256,6 +1271,23 @@ function openHLPop(btn,key,host){
   });
   setTimeout(()=>{document.addEventListener('mousedown',_hlOutside,true);document.addEventListener('keydown',_hlKey,true);window.addEventListener('resize',closeHLPop);},0);
 }
+const CARD_COLORS=['#ef5b43','#d99a24','#1d854a','#1c6db5','#0a2240','#8b5cf6','#0891b2','#b5651d','#e11d8f','#475569'];
+function openColorPop(btn,cid,root){
+  const c=findContainer(cid); const overridden=SAVE.cardColors&&SAVE.cardColors[cid]; const cur=overridden||(c&&c.color);
+  closeHLPop();
+  const pop=document.createElement('div'); pop.className='hlpop'; _hlPop=pop;
+  pop.innerHTML=CARD_COLORS.map(col=>`<button class="hlsw cardsw${col.toLowerCase()===String(cur).toLowerCase()?' sel':''}" data-col="${col}" style="background:${col}" title="${col}"></button>`).join('')
+    +(overridden?`<button class="hlsw hlclear" data-col="" title="Reset to default">✕</button>`:'');
+  document.body.appendChild(pop);
+  const r=btn.getBoundingClientRect();
+  let left=Math.min(window.scrollX+r.left, window.scrollX+document.documentElement.clientWidth-pop.offsetWidth-8);
+  pop.style.left=Math.max(8,left)+'px'; pop.style.top=(window.scrollY+r.bottom+6)+'px';
+  pop.querySelectorAll('.hlsw').forEach(s=>s.onclick=ev=>{ ev.stopPropagation();
+    syncSet('cardColors',cid,s.dataset.col||null); closeHLPop();
+    const tote=btn.closest('.tote'); if(tote){tote.outerHTML=toteHTML(findContainer(cid));wireTotes(root);}
+  });
+  setTimeout(()=>{document.addEventListener('mousedown',_hlOutside,true);document.addEventListener('keydown',_hlKey,true);window.addEventListener('resize',closeHLPop);},0);
+}
 /* highlight + note controls shared by totes, materials tables, devices */
 function wireEditable(root){
   $$('.ihl',root).forEach(btn=>btn.onclick=e=>{
@@ -1304,13 +1336,23 @@ function wireTotes(root){
   $$('.carddel',root).forEach(b=>b.onclick=e=>{e.stopPropagation();
     if(!confirm('Delete this card?'))return;
     SAVE.cards=(SAVE.cards||[]).filter(x=>x.id!==b.dataset.c);syncField('cards');renderPacking();toast('Card deleted');});
+  const newItemId=()=>'it'+Date.now().toString(36)+Math.floor(Math.random()*1e3);
+  const reflowItems=(cid)=>{const tote=root.querySelector(`.tote[data-c="${cid}"]`); if(tote){tote.outerHTML=toteHTML(findContainer(cid));wireTotes(root);} const ni=root.querySelector(`.citem-add[data-c="${cid}"]`); if(ni)ni.focus();};
   $$('.citem-add',root).forEach(inp=>{ inp.onclick=e=>e.stopPropagation();
-    inp.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();const c=findContainer(inp.dataset.c),v=inp.value.trim();
-      if(c&&v){c.items=c.items||[];c.items.push({id:'it'+Date.now().toString(36)+Math.floor(Math.random()*1e3),name:v});syncField('cards');renderPacking();
-        const ni=$(`.citem-add[data-c="${c.id}"]`);if(ni)ni.focus();}}};
+    inp.onkeydown=e=>{if(e.key!=='Enter')return; e.preventDefault(); const cid=inp.dataset.c, v=inp.value.trim(); if(!v)return;
+      const c=findContainer(cid);
+      if(c&&c.kind==='custom'){ c.items=c.items||[]; c.items.push({id:newItemId(),name:v}); syncField('cards'); }
+      else { SAVE.extraItems=SAVE.extraItems||{}; (SAVE.extraItems[cid]=SAVE.extraItems[cid]||[]).push({id:newItemId(),name:v}); syncField('extraItems'); }
+      reflowItems(cid);
+    };
   });
-  $$('.citem-del',root).forEach(b=>b.onclick=e=>{e.stopPropagation();const c=findContainer(b.dataset.c);
-    if(c){c.items=(c.items||[]).filter(it=>it.id!==b.dataset.i);syncField('cards');renderPacking();}});
+  $$('.citem-del',root).forEach(b=>b.onclick=e=>{e.stopPropagation();
+    const cid=b.dataset.c, iref=b.dataset.i, c=findContainer(cid);
+    if(iref.indexOf('e:')===0){ const id=iref.slice(2); SAVE.extraItems=SAVE.extraItems||{}; SAVE.extraItems[cid]=(SAVE.extraItems[cid]||[]).filter(it=>it.id!==id); syncField('extraItems'); }
+    else if(c&&c.kind==='custom'){ c.items=(c.items||[]).filter(it=>it.id!==iref); syncField('cards'); }
+    const tote=b.closest('.tote'); if(tote){tote.outerHTML=toteHTML(findContainer(cid));wireTotes(root);}
+  });
+  $$('.lidcolor',root).forEach(b=>b.onclick=e=>{e.stopPropagation();openColorPop(b,b.dataset.c,root);});
   $$('.ownadd',root).forEach(s=>{
     s.onclick=e=>e.stopPropagation();
     s.onchange=()=>{
