@@ -1166,6 +1166,34 @@ function renderTaskList(root,tasks,editable){
 
 /* ============ PACKING ============ */
 let packGroup='week';
+/* export every card + item to a spreadsheet (CSV) */
+function csvCell(v){ v=(v==null?'':String(v)); return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+function phaseLabel(w){ return w==='pre'?'Pre-camp':w==='core'?'Camp-Core (all summer)':('Week '+w); }
+function exportCSV(){
+  const rows=[['Group','Card','Phase','Owners','Item','Qty','Available','Done/Packed','Highlight','Note']];
+  allContainers().forEach(c=>{
+    const owners=ownersOf(c.id).map(id=>OWN[id]?OWN[id].name:id).join(', ');
+    const phase=phaseLabel(c.week);
+    if(c.kind==='devices'){
+      (SAVE.devices||[]).forEach(d=>{const key='d:'+d.id;
+        rows.push(['Devices & Tech',c.label,phase,owners,d.name,'',(SAVE.deviceCount&&SAVE.deviceCount[d.id]!=null)?SAVE.deviceCount[d.id]:'',(SAVE.deviceDone&&SAVE.deviceDone[d.id])?'Yes':'',hlColor(key)||'',(SAVE.itemNote&&SAVE.itemNote[key])||'']); });
+      return;
+    }
+    if(c.kind!=='pack'&&c.kind!=='custom'){ rows.push([c.zone||'',c.label,phase,owners,c.note||'','','','','','']); return; }
+    let list;
+    if(c.kind==='custom') list=(c.items||[]).map(it=>({key:c.id+':'+it.id,dk:'t:'+c.id+':'+it.id,name:it.name,qty:''}));
+    else list=c.contents.map((it,i)=>({key:c.id+':'+i,dk:'t:'+c.id+':'+i,name:it.name,qty:it.qty||''}))
+      .concat(((SAVE.extraItems&&SAVE.extraItems[c.id])||[]).map(it=>({key:c.id+':e:'+it.id,dk:'t:'+c.id+':e:'+it.id,name:it.name,qty:''})));
+    const grp=c.kind==='custom'?'Added':(c.zone||'');
+    if(!list.length){ rows.push([grp,c.label,phase,owners,'','','','','','']); return; }
+    list.forEach(o=>rows.push([grp,c.label,phase,owners,o.name,o.qty,'',(SAVE.packed&&SAVE.packed[o.key])?'Yes':'',hlColor(o.dk)||'',(SAVE.itemNote&&SAVE.itemNote[o.dk])||'']));
+  });
+  const csv='﻿'+rows.map(r=>r.map(csvCell).join(',')).join('\r\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='alpha-odyssey-packing-'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500);
+  toast(`Exported ${rows.length-1} rows`);
+}
 function toteHTML(c){
   if(c.kind==='devices')return devicesCardHTML(c);
   if(c.kind==='custom')return customCardHTML(c);
@@ -1378,8 +1406,10 @@ function renderPacking(){
     <div class="packtoggle"><span class="${packGroup==='week'?'active':''}" data-g="week">By week</span><span class="${packGroup==='zone'?'active':''}" data-g="zone">By storage zone</span><span class="${packGroup==='owner'?'active':''}" data-g="owner">By owner</span></div>
     <span class="muted" style="font-size:.82rem">Label scheme <code>AO · W# · COMPONENT · ##</code> · ${DATA.containers.filter(c=>c.kind==='pack').length} totes · ${DATA.containers.filter(c=>c.kind!=='pack'&&c.kind!=='devices').length} build/rental flags</span>
     <button class="btn newcard" style="margin-left:auto" id="newCardBtn">＋ New card</button>
+    <button class="btn ghost" id="exportBtn">⬇ Export sheet</button>
     <button class="btn ghost" onclick="window.print()">⎙ Print pick list</button></div>`;
   $$('#packControls .packtoggle span').forEach(s=>s.onclick=()=>{packGroup=s.dataset.g;renderPacking();});
+  $('#exportBtn').onclick=exportCSV;
   $('#newCardBtn').onclick=()=>{
     const id='card'+Date.now().toString(36)+Math.floor(Math.random()*1e3);
     SAVE.cards=SAVE.cards||[]; SAVE.cards.unshift({id,kind:'custom',week:'pre',zone:'Added',color:'#475569',label:'New card',items:[]});
